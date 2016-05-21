@@ -1,0 +1,95 @@
+/*
+.slimtable-container-div {
+	display: inline-block;
+}
+
+.slimtable {
+	border-collapse: collapse;
+}
+
+.slimtable th {
+	-ms-user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.slimtable th.slimtable-activeth {
+}
+
+.slimtable td {
+}
+
+.slimtable tr:nth-child(even) {
+}
+
+.slimtable tr:nth-child(odd) {
+}
+
+*/
+
+/* Paging */
+.slimtable-paging-div {
+	margin-top: 5px;
+	display: inline-block;
+	width: 100%;
+}
+
+.slimtable-paging-seldiv {
+	display: inline;
+	float: right;
+}
+
+.slimtable-paging-select {
+}
+
+.slimtable-paging-btnsdiv {
+	display: inline-block;
+}
+
+.slimtable-page-btn {
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	line-height: 25px;
+	border-radius: 5px;
+	border: 1px solid #ccc;
+	text-align: center;
+	font-weight: bold;
+	margin-right: 5px;
+	cursor: pointer;
+}
+
+.slimtable-page-btn.active {
+	background-color: #ccc;
+}
+
+/* Sprites */
+/*
+.slimtable-sprites {
+	margin-left: 2px;
+	margin-right: 5px;
+	vertical-align: middle;
+
+	display: inline-block;
+	background-image: url("arrows.png");
+	width: 17px;
+	height: 17px;
+}
+
+.slimtable-sortboth {
+	background-position: -1px -1px;
+}
+
+.slimtable-sortnone {
+	background-position: -19px -19px;
+}
+
+.slimtable-sortasc {
+	background-position: -1px -19px;
+}
+
+.slimtable-sortdesc {
+	background-position: -19px -1px;
+}
+*/
