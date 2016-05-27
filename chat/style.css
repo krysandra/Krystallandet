@@ -9,7 +9,7 @@ p								{ display: block; }
 .chatavatar						{ float: left; margin: 0; margin-left: -2px; padding-right: 2px; }
 #page-wrap                      { position: relative; }
 a								{ text-decoration: none; color: #674c31;}
-.linkspan						{ width: 97%; text-align: right;  cursor:pointer;}
+.linkspan						{ width: 97%; text-align: right;}
 .oldermessages					{ width: 100%; text-align: center;  cursor:pointer;}
 
 #chat-wrap                      { width: 99%; overflow-y:scroll; height: 350px; margin-bottom: 10px; }

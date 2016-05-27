@@ -31,7 +31,7 @@ if(isset($_GET['id']))
 		
 		$characterposts = $forum->count_ingame_posts_from_character($id)->fetch_assoc();
 		echo "<span class='userprofiletabletext'>Antal posts: </span>".$characterposts['res']."<br/>";
-		echo "<span class='userprofiletabletext'>Oprettet: </span>".date("j. M Y", strtotime($character['date_created']))."<br/>";
+		echo "<span class='userprofiletabletext'>Oprettet: </span>".date("d.m.Y", strtotime($character['date_created']))."<br/>";
 		if($character['dead'] == 1) { echo "<span class='userprofiletabletext'>Status:</span> Død<br/>"; }
 		else { if($character['accepted'] == 0) { echo "<span class='userprofiletabletext'>Status:</span> Ikke godkendt<br/>"; }
 		else { if($character['active'] == 1) { echo "<span class='userprofiletabletext'>Status:</span> Aktiv<br/>"; } else { echo "Status: Inaktiv<br/>";}}}
@@ -244,7 +244,7 @@ if(isset($_GET['showposts']))
 			{
 					echo "<a class='username' style='color:".$member['color'].";' href='characterprofile.php?id=".$member['character_ID']."'>".$member['name']." </a><br/>";
 			}		
-			echo date("j. M Y G:i", strtotime($p['datetime']));
+			echo date("d.m.Y G:i", strtotime($p['datetime']));
 			echo "<br/><br/>";
 			
 			echo "<b>Forum:</b> <a href='viewforum.php?f=".$currentforum['forum_ID']."'>".$currentforum['title']."</a><br/>";
@@ -440,7 +440,7 @@ if(isset($_GET['showtopics']))
 			echo "Af <a class='username' style='color:".$user['color'].";' href='characterprofile.php?id=".$user['character_ID']."'>".$user['name']."</a> ";
 			
 			echo "<a href='viewtopic.php?t=".$t['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'><img src='images/icon_topic_latest.gif' title='Gå til post'/></a>";	
-			echo "&raquo; ".date("j. M Y G:i", strtotime($t['datetime']));
+			echo "&raquo; ".date("d.m.Y G:i", strtotime($t['datetime']));
 			if($t['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$t['warning']."</span>"; } else { echo "<br/>"; }
 			echo "i <a class='topictitle' href='viewforum.php?f=".$t['forum_ID']."'>".$t['forumtitle']."</a>";
 			echo "</td>";
@@ -460,7 +460,7 @@ if(isset($_GET['showtopics']))
 
 			echo "<a href='viewtopic.php?t=".$t['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'><img src='images/icon_topic_latest.gif' title='Gå til post'/></a>";
 			echo "</br>";	
-			echo date("j. M Y G:i", strtotime($lastpost['datetime']))."</td>";
+			echo date("d.m.Y G:i", strtotime($lastpost['datetime']))."</td>";
 			echo "</tr>";
 		}
 		echo "</table>";

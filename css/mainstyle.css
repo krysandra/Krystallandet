@@ -232,7 +232,7 @@ textarea
 	  background-color: #e6e6e6;
 	  
 	  width: 100%;  
-	  height: 500px;
+	  height: 510px;
 }
 
 #footer #cbox #icchat
@@ -261,7 +261,7 @@ textarea
 	  background-color: #e6e6e6;
 	  
 	  width: 100%;  
-	  height: 500px;
+	  height: 510px;
 }
 
 #footer #cbox iframe
@@ -990,6 +990,11 @@ textarea
 	padding-bottom: 15px;
 }
 
+.sidebox .sidebarcontent .smallsidebartext
+{
+	font-size: 11px;	
+}
+
 .sidebox h5
 {
 	text-decoration: none;
@@ -1007,11 +1012,14 @@ textarea
 .sidebox table
 {
 	width: 100%;
+	max-width: 250px;
 }
 
 .sidebox td
 {
 	text-align: center;	
+	word-wrap: break-word;
+	max-width: 210px;
 }
 
 /* Viewforum */
@@ -1063,6 +1071,8 @@ textarea
 	font-size: 11px;
 	color: #343a41;	
 	background-color: #e6e6e6;	
+	word-wrap: break-word;
+	max-width: 470px;
 }
 
 

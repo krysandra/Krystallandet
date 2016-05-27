@@ -1,5 +1,6 @@
 <?php
 include('header.php');
+include('functions/SimpleImage.php');
 ?>
 <?php
 if(!isset($_SESSION['user']))
@@ -35,8 +36,8 @@ else
 		{
 			echo "<div class='category'><a href=''>Min brugerprofil</a></div>";
 			echo "<div id='ucp_content'>";
-			echo "<p class='center'>Her kan du redigere din brugerprofil her på siden.<br/>
-			Ønsker du at oprette en ny karakter eller redigere dine eksisterende karakterer, så benyt den ovenstående menu.</p>";
+			echo "<p class='center'>Her kan du redigere din personlige brugerprofil.<br/>
+			Ønsker du i stedet at oprette en ny karakter eller redigere dine eksisterende karakterer, så benyt den ovenstående menu.</p>";
 			echo "</div>";
 			
 		}
@@ -85,7 +86,7 @@ else
 				{
 					echo "<input type='hidden' name='color' value='".$user_logged_in['color']."'>";
 				}
-				echo "<tr><td>Titel</td>"; echo "<td> <input type='text' name='title' value='".htmlspecialchars($user_logged_in['title'], ENT_QUOTES, 'UTF-8')."'>* </td></tr>";
+				echo "<tr><td>Titel</td>"; echo "<td> <input type='text' name='title' maxlength='30' value='".htmlspecialchars($user_logged_in['title'], ENT_QUOTES, 'UTF-8')."'>* </td></tr>";
 				echo "<tr><td>Hvordan fandt du siden? </td>"; echo "<td> <input type='text' name='reference' value='".htmlspecialchars($user_logged_in['reference'], ENT_QUOTES, 'UTF-8')."'> </td></tr>";
 				echo "<tr><td>Geografisk sted: </td>"; echo "<td> <input type='text' name='geography' value='".htmlspecialchars($user_logged_in['geography'], ENT_QUOTES, 'UTF-8')."'> </td></tr>";
 				echo "<tr><td>Hjemmeside: </td>"; echo "<td> <input type='text' name='website' value='".htmlspecialchars($user_logged_in['website'], ENT_QUOTES, 'UTF-8')."'> </td></tr>";
@@ -157,28 +158,72 @@ else
 			//Submitting new avatar
 			if(isset($_POST['submit_profileavatar']))
 			{
-				$newavatar = htmlspecialchars($_POST["avatar_url"]);	
-				$img_formats = array("png", "jpg", "jpeg", "gif");//Etc. . . 
-				$path_info = pathinfo($newavatar);
-				
-				if (!in_array(strtolower($path_info['extension']), $img_formats)) 
-				{
-				   $errormsg = "Den indtastede URL skal ende på .png, .jpg, .jpeg eller .gif";
+				if (!empty($_FILES['avatarimg']['name'])) {
+					$validExtensions = array('.jpg', '.jpeg', '.gif', '.png');
+					 // get extension of the uploaded file
+					$fileExtension = strrchr($_FILES['avatarimg']['name'], ".");
+					// check if file Extension is on the list of allowed ones
+					if (in_array($fileExtension, $validExtensions)) {
+						//image is allowed
+						
+						$newName = time() . '_' . $_FILES['avatarimg']['name'];
+						$destination = 'images/avatars/' . $newName;
+						if (move_uploaded_file($_FILES['avatarimg']['tmp_name'], $destination)) {
+							//file copy successful
+							
+							list($origWidth, $origHeight) = getimagesize($destination);
+							$maxWidth = 150;
+							$maxHeight = 150;
+							
+							$widthRatio = $maxWidth / $origWidth;
+							$heightRatio = $maxHeight / $origHeight;
+						
+							// Ratio used for calculating new image dimensions.
+							$ratio = min($widthRatio, $heightRatio);
+							
+							// Calculate new image dimensions.
+							$newWidth  = (int) ($origWidth  * $ratio);
+							$newHeight = (int) ($origHeight * $ratio);
+							
+							$img = new abeautifulsite\SimpleImage($destination);
+							$img->resize($newWidth, $newHeight);
+							$img->save();
+							$updateavatar = $forum->update_superuser_avatar($destination, $user_logged_in_ID);
+							
+							header('Location:ucp.php?mode=avatar');	
+							
+						}
+						
+					} else {
+						$errormsg = "Den uploadede fil skal ende på .png, .jpg, .jpeg eller .gif";
+					}
 				}
 				
 				else
 				{
-					list($width, $height, $type, $attr) = getimagesize($newavatar);
-					if($height > 150 || $width > 150)
+					$newavatar = htmlspecialchars($_POST["avatar_url"]);	
+					$img_formats = array("png", "jpg", "jpeg", "gif");//Etc. . . 
+					$path_info = pathinfo($newavatar);
+					
+					if (!in_array(strtolower($path_info['extension']), $img_formats)) 
 					{
-						$errormsg = "Billedet er for stort. Det må maks være 150px i højden samt 150px i bredden.";
+					   $errormsg = "Den indtastede URL skal ende på .png, .jpg, .jpeg eller .gif";
 					}
+					
 					else
 					{
-						$updateavatar = $forum->update_superuser_avatar($newavatar, $user_logged_in_ID);
-						header('Location:ucp.php?mode=avatar');	
+						list($width, $height, $type, $attr) = getimagesize($newavatar);
+						if($height > 150 || $width > 150)
+						{
+							$errormsg = "Billedet er for stort. Det må maks være 150px i højden samt 150px i bredden.";
+						}
+						else
+						{
+							$updateavatar = $forum->update_superuser_avatar($newavatar, $user_logged_in_ID);
+							header('Location:ucp.php?mode=avatar');	
+						}
 					}
-				}					
+				}
 			}
 			
 			echo "<div class='category'><a href=''>Avatar</a></div>";
@@ -197,10 +242,12 @@ else
 			echo "<h3>Nyt avatar</h3>";
 			
 			echo "<table>";
-			echo "<form method='post' class='confirmform'>";
+			echo "<form method='post' enctype='multipart/form-data' class='confirmform'>";
 			
-			echo "<tr><td>URL: <br/>";
-			echo "<input type='text' name='avatar_url' required></td></tr>";
+			echo "<tr><td><input type='file' name='avatarimg' id='fileToUpload' /></td></tr>";
+			
+			echo "<tr><td>Upload via URL: <br/>";
+			echo "<input type='text' name='avatar_url'></td></tr>";
 			
 			echo "<tr><td><input type='submit' name='submit_profileavatar' value='Gem ændringer'/></td></tr>";
 			
@@ -209,10 +256,10 @@ else
 			
 			echo "<span class='errormsg'>".$errormsg."</span>";	
 			
-			echo "<p class='smalltext'>Dit avatar kan max være 150px X 150px<br/>
-			For at undgå underligt skalerede billeder, kræver KL, at dit billede på forhånd er denne størrelse.<br/>
-			Vi anbefaler at du benytter et billedbehandlingsprogram samt en gratis billede-hosting side for at opnå dette.</p>";
-			echo "</div>";
+			echo "<p class='smalltext'>Dit avatar kan max være 150px X 150px. 
+			For at undgå underligt skalerede billeder, kræver KL, at dit billede på forhånd er denne størrelse, hvis du tilføjer billede via URL.<br/>
+			Vi anbefaler at du benytter et billedbehandlingsprogram samt en gratis billede-hosting side for at opnå dette.<br/>
+			Alternativt kan du uploade billedet direkte fra din computer.</p>";
 			echo "</div>";
 			
 		} //end avatar
@@ -304,11 +351,11 @@ else
 			echo "<td><input type='text' name='email' value='".htmlspecialchars($userdata['email'], ENT_QUOTES, 'UTF-8')."' required></td></tr>";
 			
 			echo "<tr><td>Nyt kodeord: </td>";
-			echo "<td><input type='password' name='password' ></td></tr>";
+			echo "<td><input type='password' name='password' maxlength='20'></td></tr>";
 			echo "<tr><td>Bekræft kodeord: </td>";
-			echo "<td><input type='password' name='password_confirm' ></td></tr>";
+			echo "<td><input type='password' name='password_confirm' maxlength='20'></td></tr>";
 			echo "<tr><td>Nuværende kodeord: </td>";
-			echo "<td><input type='password' name='password_current' >*</td></tr>";
+			echo "<td><input type='password' name='password_current' maxlength='20'>*</td></tr>";
 			
 			echo "<tr><td></td><td><input type='submit' name='submit_profilecore' value='Gem ændringer'/></td></tr>";
 			
@@ -411,7 +458,7 @@ else
 		{
 			echo "<div class='category'><a href=''>Mine karakterer</a></div>";
 			echo "<div id='ucp_content'>";
-			echo "<p class='center'>Her kan du ændre dine karakterer her på siden.<br/>
+			echo "<p class='center'>Her kan du ændre i de karakterer, du har i rollespillet.<br/>
 			Ønsker du at oprette en ny karakter i stedet, så benyt den ovenstående menu.</p>";
 			echo "</div>";
 			
@@ -425,7 +472,7 @@ else
 			{
 				echo "<div class='category'><a href=''>Mine karakterer</a></div>";
 				echo "<div id='ucp_content'>";
-				echo "<p class='center'>Her kan du ændre dine karakterer her på siden.<br/>
+				echo "<p class='center'>Her kan du ændre i de karakterer, du har i rollespillet.<br/>
 				Ønsker du at oprette en ny karakter i stedet, så benyt den ovenstående menu.</p>";
 				echo "</div>";
 				
@@ -456,28 +503,74 @@ else
 					//Submitting new avatar
 					if(isset($_POST['submit_profileavatar']))	
 					{
-						$newavatar = htmlspecialchars($_POST["avatar_url"]);	
-						$img_formats = array("png", "jpg", "jpeg", "gif");//Etc. . . 
-						$path_info = pathinfo($newavatar);
-	
-						if (!in_array(strtolower($path_info['extension']), $img_formats)) 
+						if (!empty($_FILES['avatarimg']['name'])) 
 						{
-						   $errormsg = "Den indtastede URL skal ende på .png, .jpg, .jpeg eller .gif";
-						}
-	
-						else	
-						{	
-							list($width, $height, $type, $attr) = getimagesize($newavatar);	
-							if($height > 200 || $width > 150)	
-							{	
-								$errormsg = "Billedet er for stort. Det må maks være 200px i højden samt 150px i bredden.";	
-							}	
-							else
-							{
-								$updateavatar = $forum->update_character_avatar($newavatar, $selectedchar);
-								header('Location:ucp.php?menu=char&mode=avatar&characterselect='.$selectedchar);		
+							$validExtensions = array('.jpg', '.jpeg', '.gif', '.png');
+							 // get extension of the uploaded file
+							$fileExtension = strrchr($_FILES['avatarimg']['name'], ".");
+							// check if file Extension is on the list of allowed ones
+							if (in_array($fileExtension, $validExtensions)) {
+								//image is allowed
+								
+								$newName = time() . '_' . $_FILES['avatarimg']['name'];
+								$destination = 'images/characteravatars/' . $newName;
+								if (move_uploaded_file($_FILES['avatarimg']['tmp_name'], $destination)) {
+									//file copy successful
+									
+									list($origWidth, $origHeight) = getimagesize($destination);
+									$maxWidth = 150;
+									$maxHeight = 200;
+									
+									$widthRatio = $maxWidth / $origWidth;
+									$heightRatio = $maxHeight / $origHeight;
+								
+									// Ratio used for calculating new image dimensions.
+									$ratio = min($widthRatio, $heightRatio);
+									
+									// Calculate new image dimensions.
+									$newWidth  = (int) ($origWidth  * $ratio);
+									$newHeight = (int) ($origHeight * $ratio);
+									
+									$img = new abeautifulsite\SimpleImage($destination);
+									$img->resize($newWidth, $newHeight);
+									$img->save();
+									$updateavatar = $forum->update_character_avatar($destination, $selectedchar);
+									
+									header('Location:ucp.php?menu=char&mode=avatar&characterselect='.$selectedchar);	
+									
+								}
+								
+							}	 
+							else {
+								$errormsg = "Den uploadede fil skal ende på .png, .jpg, .jpeg eller .gif";
 							}
-						}					
+						}
+				
+					else
+					{
+							$newavatar = htmlspecialchars($_POST["avatar_url"]);	
+							$img_formats = array("png", "jpg", "jpeg", "gif");//Etc. . . 
+							$path_info = pathinfo($newavatar);
+		
+							if (!in_array(strtolower($path_info['extension']), $img_formats)) 
+							{
+							   $errormsg = "Den indtastede URL skal ende på .png, .jpg, .jpeg eller .gif";
+							}
+		
+							else	
+							{	
+								list($width, $height, $type, $attr) = getimagesize($newavatar);	
+								if($height > 200 || $width > 150)	
+								{	
+									$errormsg = "Billedet er for stort. Det må maks være 200px i højden samt 150px i bredden.";	
+								}	
+								else
+								{
+									$updateavatar = $forum->update_character_avatar($newavatar, $selectedchar);
+									header('Location:ucp.php?menu=char&mode=avatar&characterselect='.$selectedchar);		
+								}
+							}					
+						}
 					}
 	
 
@@ -495,18 +588,22 @@ else
 					echo "<h3>Nyt avatar</h3>";
 					echo "<table>";
 	
-					echo "<form method='post' class='confirmform'>";
+					echo "<form method='post' enctype='multipart/form-data' class='confirmform'>";
+			
+					echo "<tr><td><input type='file' name='avatarimg' id='fileToUpload' /></td></tr>";
 	
-					echo "<tr><td>URL:<br/>";
+					echo "<tr><td>Upload via URL:<br/>";
 	
-					echo "<input type='text' name='avatar_url' required></td></tr>";
+					echo "<input type='text' name='avatar_url'></td></tr>";
 					echo "<tr><td><input type='submit' name='submit_profileavatar' value='Gem ændringer'/></td></tr>";
 					echo "</form>";
 	
 					echo "</table>";
 					echo "<span class='errormsg'>".$errormsg."</span>";	
 	
-					
+					echo "<p class='smalltext'>Dit avatar kan max være 200px højt og 150px bredt. For at undgå underligt skalerede billeder, kræver KL, at dit billede på forhånd er denne størrelse, hvis du tilføjer billede via URL.<br/>
+			Vi anbefaler at du benytter et billedbehandlingsprogram samt en gratis billede-hosting side for at opnå dette.<br/>
+			Alternativt kan du uploade billedet direkte fra din computer.</p>";
 	
 					echo "</div>";
 	
@@ -754,7 +851,7 @@ else
 						echo "<tr><td class='tableleft'><span class='bold'>Viste karakternavn:</span>
 						 <span class='tablesubtext'>Det karakternavn, der vises på forummet.</span></td>"; 
 	
-						echo "<td><input type='text' name='charactername_forum' value='".htmlspecialchars($currentchar['name'], ENT_QUOTES, 'UTF-8')."'></td></tr>";	
+						echo "<td><input type='text' name='charactername_forum' value='".htmlspecialchars($currentchar['name'], ENT_QUOTES, 'UTF-8')."' maxlength='25'></td></tr>";	
 	
 							
 	
@@ -836,7 +933,7 @@ else
 	
 						{ 
 	
-							if($a == $profiledata['alignment']) { echo "<option value='".$a."' selected>".$a."</option>"; } else { echo "<option value='".$a."' selected>".$a."</option>"; }
+							if($a == $profiledata['alignment']) { echo "<option value='".$a."' selected>".$a."</option>"; } else { echo "<option value='".$a."'>".$a."</option>"; }
 	
 						}					
 	
@@ -884,7 +981,7 @@ else
 	
 						<span id='combo' class='tablesubtext'>Hvilke racer, din karakter er en blanding af.</span></td></tr>"; 
 						
-						echo "<tr class='raceinfo_tr'><td colspan='2'><textarea name='raceinfo' class='textarea_small'>".htmlspecialchars($profiledata['raceinfo'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr class='raceinfo_tr'><td colspan='2'><textarea name='raceinfo' class='textarea_small'>".$profiledata['raceinfo']."</textarea></td></tr>";	
 	
 						// Script to show extra race information //
 	
@@ -1009,7 +1106,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterlooks' class='textarea_large'>".htmlspecialchars($profiledata['looks'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterlooks' class='textarea_large'>".$profiledata['looks']."</textarea></td></tr>";	
 	
 						
 	
@@ -1036,7 +1133,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='charactermagic1' class='textarea_small'>".htmlspecialchars($profiledata['magic1'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='charactermagic1' class='textarea_small'>".$profiledata['magic1']."</textarea></td></tr>";	
 	
 						
 	
@@ -1060,7 +1157,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='charactermagic2' class='textarea_small'>".htmlspecialchars($profiledata['magic2'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";
+						echo "<tr><td colspan='2'><textarea name='charactermagic2' class='textarea_small'>".$profiledata['magic2']."</textarea></td></tr>";
 	
 						
 	
@@ -1102,7 +1199,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterpersonality' class='textarea_large'>".htmlspecialchars($profiledata['personality'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterpersonality' class='textarea_large'>".$profiledata['personality']."</textarea></td></tr>";	
 	
 						
 	
@@ -1128,7 +1225,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea class='profiletextarea' name='characterstory'>".htmlspecialchars($profiledata['story'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea class='profiletextarea' name='characterstory'>".$profiledata['story']."</textarea></td></tr>";	
 	
 						
 	
@@ -1140,7 +1237,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterfamily' class='textarea_small'>".htmlspecialchars($profiledata['family'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterfamily' class='textarea_small'>".$profiledata['family']."</textarea></td></tr>";	
 	
 						
 	
@@ -1168,7 +1265,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterother' class='textarea_large'>".htmlspecialchars($profiledata['other'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterother' class='textarea_large'>".$profiledata['other']."</textarea></td></tr>";	
 	
 						
 	
@@ -1353,10 +1450,11 @@ else
 						
 						
 						//Preventing writing data to the small number inputs
-						
+						/*
 						echo "<script> $('.numberinput_small').keypress(function (evt) {
 							evt.preventDefault();
 						});</script>";
+						*/
 	
 					}
 	
@@ -1399,6 +1497,7 @@ else
 							//$raceinfo= htmlspecialchars($_POST["raceinfo"]);
 							$height = $_POST["characterheight"];
 							$weight = $_POST["characterweight"];
+
 							$looks = htmlspecialchars($_POST["characterlooks"]);
 							$magic1_skill = $_POST["charactermagic1_skill"];
 							$magic2_skill = $_POST["charactermagic2_skill"];
@@ -1441,7 +1540,7 @@ else
 						echo "<tr><td class='tableleft'><span class='bold'>Viste karakternavn:</span> 
 						<span class='tablesubtext'>Det karakternavn, der vises på forummet.</span></td>"; 
 	
-						echo "<td><input type='text' name='charactername_forum' value='".htmlspecialchars($currentchar['name'], ENT_QUOTES, 'UTF-8')."'></td></tr>";	
+						echo "<td><input type='text' name='charactername_forum' value='".htmlspecialchars($currentchar['name'], ENT_QUOTES, 'UTF-8')."' maxlength='25'></td></tr>";	
 	
 							
 	
@@ -1450,7 +1549,7 @@ else
 						echo "<tr><td class='tableleft'><span class='bold'>Fulde karakternavn:</span>
 						 <span class='tablesubtext'>Din karakters fornavn og efternavn samt eventuelle mellemnavne.</span></td>"; 
 	
-						echo "<td><input type='text' name='charactername_full' value='".htmlspecialchars($profiledata['fullname'], ENT_QUOTES, 'UTF-8')."' readonly></td></tr>";		
+						echo "<td><input type='text' name='charactername_full' value='".htmlspecialchars($profiledata['fullname'], ENT_QUOTES, 'UTF-8')."' disabled></td></tr>";		
 	
 						
 	
@@ -1496,7 +1595,7 @@ else
 	
 						echo "<tr><td class='tableleft'><span class='bold'>Fødselsdag:</span>
 						 <span class='tablesubtext'>Behøver blot indeholde dag og måned. Du skal selv bruge dette til at holde styr på din karakters alder.</span></td>";
-						echo "<td><input type='text' name='characterbirthday' value='".htmlspecialchars($profiledata['birthday'], ENT_QUOTES, 'UTF-8')."' readonly></td></tr>";	
+						echo "<td><input type='text' name='characterbirthday' value='".htmlspecialchars($profiledata['birthday'], ENT_QUOTES, 'UTF-8')."' disabled></td></tr>";	
 
 						/* Character faith*/
 	
@@ -1569,7 +1668,7 @@ else
 	
 						<span id='combo' class='tablesubtext'>Hvilke racer, din karakter er en blanding af.</span></td></tr>"; 
 						
-						echo "<tr class='raceinfo_tr'><td colspan='2'><textarea name='raceinfo' class='textarea_small' readonly>".htmlspecialchars($profiledata['raceinfo'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr class='raceinfo_tr'><td colspan='2'><textarea name='raceinfo' class='textarea_small' disabled>".$profiledata['raceinfo']."</textarea></td></tr>";	
 						
 						
 	
@@ -1701,7 +1800,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterlooks' class='textarea_large'>".htmlspecialchars($profiledata['looks'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterlooks' class='textarea_large'>".$profiledata['looks']."</textarea></td></tr>";	
 	
 						
 	
@@ -1728,7 +1827,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='charactermagic1' class='textarea_small' readonly>".htmlspecialchars($profiledata['magic1'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='charactermagic1' class='textarea_small' disabled>".$profiledata['magic1']."</textarea></td></tr>";	
 	
 						
 	
@@ -1752,7 +1851,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='charactermagic2' class='textarea_small' readonly>".htmlspecialchars($profiledata['magic2'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";
+						echo "<tr><td colspan='2'><textarea name='charactermagic2' class='textarea_small' disabled>".$profiledata['magic2']."</textarea></td></tr>";
 	
 						
 	
@@ -1794,7 +1893,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterpersonality' class='textarea_large' readonly>".htmlspecialchars($profiledata['personality'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterpersonality' class='textarea_large' disabled>".$profiledata['personality']."</textarea></td></tr>";	
 	
 						
 	
@@ -1820,7 +1919,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea class='profiletextarea' name='characterstory'>".htmlspecialchars($profiledata['story'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea class='profiletextarea' name='characterstory'>".$profiledata['story']."</textarea></td></tr>";	
 	
 						
 	
@@ -1832,7 +1931,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterfamily' class='textarea_small'>".htmlspecialchars($profiledata['family'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterfamily' class='textarea_small'>".$profiledata['family']."</textarea></td></tr>";	
 	
 						
 	
@@ -1860,7 +1959,7 @@ else
 	
 						<br/> Det er muligt at bruge bbcodes som [b][/b], [i][/i] og [img][/img]</span></td></tr>"; 
 	
-						echo "<tr><td colspan='2'><textarea name='characterother'  class='textarea_large'>".htmlspecialchars($profiledata['other'], ENT_QUOTES, 'UTF-8')."</textarea></td></tr>";	
+						echo "<tr><td colspan='2'><textarea name='characterother'  class='textarea_large'>".$profiledata['other']."</textarea></td></tr>";	
 	
 						
 	
@@ -2076,11 +2175,12 @@ else
 	
 						
 						
-						//Preventing writing data to the small number inputs
-						
+							//Preventing writing data to the small number inputs
+						/*
 						echo "<script> $('.numberinput_small').keypress(function (evt) {
 							evt.preventDefault();
 						});</script>";
+						*/
 	
 					}
 	
@@ -2090,6 +2190,7 @@ else
 	
 			} //end profile
 			
+
 			if(($_GET['mode']) == "submitted")
 			{	
 				echo "Din karakterprofil vil blive tilset og godkendt af en admin. Du vil modtage en PB med godkendelsesstatus.";

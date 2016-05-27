@@ -11,7 +11,7 @@ echo "<h5  class='center'>Online tekstrollespil</h5>
 Vi befinder os i det magiske land, Krystallandet, hvis univers læner sig op ad en middelalderinspireret periode, men med magi, elvere, dæmoner og andre magiske væsner.
 <br/><br/>
 Skab din egen, originale karakter og vær med til at bestemme, hvordan historien skal udfolde sig.<br/><br/>
-<a href=''>Klik her for at komme godt i gang</a></p>
+<a href='viewtopic.php?t=35'>Klik her for at komme godt i gang</a></p>
 </span>";
 echo "</div></div>";
 
@@ -141,6 +141,7 @@ while($post = $latestposts->fetch_assoc())
 	echo "<a class='bold' href='viewtopic.php?t=".$post['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'>".$post['topictitle']."</a><br/>";
 	if($post['warning'] != ""){ echo "<span class='italic'>".$post['warning']."</span><br/>"; }
 	$lastposter = $forum->get_last_topic_poster($post['topic_ID'])->fetch_assoc();
+	echo "<span class='smallsidebartext'>";
 	if($post['ingame'] == 1) 
 	{ 
 		$character = $forum->get_character($lastposter['fk_character_ID'])->fetch_assoc();
@@ -149,10 +150,11 @@ while($post = $latestposts->fetch_assoc())
 	else
 	{
 		$superuser = $forum->get_superuser($lastposter['fk_superuser_ID'])->fetch_assoc();
-		echo "<a class='username' style='color:".$superuser['color'].";' href='memberprofile.php?id=".$lastposter['fk_superuser_ID']."'>".$superuser['name']."</a> ";
+		echo "af <a class='username' style='color:".$superuser['color'].";' href='memberprofile.php?id=".$lastposter['fk_superuser_ID']."'>".$superuser['name']."</a> ";
 	}
-	echo date("j. M Y G:i", strtotime($post['last_posted']))."<br/>";
-	echo " i <a href='viewforum.php?f=".$post['forum_ID']."'>".$post['forumtitle']."</a><br/>";
+	echo date("d.m.Y G:i", strtotime($post['last_posted']))."<br/>";
+	echo " i <a class='bold' href='viewforum.php?f=".$post['forum_ID']."'>".$post['forumtitle']."</a><br/>";
+	echo "</span>";
 	echo "</td></tr>";	
 }
 echo "</table>";

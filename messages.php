@@ -34,7 +34,7 @@ else
 			echo "<a href='messages.php?mode=view&m=".$m['message_ID']."'>".$m['title']."</a>";
 			echo "</td>";
 			echo "<td><a class='username' style='color:".$sender['color'].";' href='memberprofile.php?id=".$sender['superuser_ID']."'>".$sender['name']."</a> </td>";
-			echo "<td> ".date("j. M Y G:i", strtotime($m['datetime']))."</td>";	
+			echo "<td> ".date("d.m.Y G:i", strtotime($m['datetime']))."</td>";	
 			echo "</tr>";
 		}
 		
@@ -126,7 +126,7 @@ else
 		?> 
         <script type="text/javascript">
 			function popup (url) {
-				win = window.open(url, "window1", "width=600,height=400,status=no,scrollbars=no,resizable=yes");
+				win = window.open(url, "window1", "width=600,height=400,status=no,scrollbars=1,resizable=yes");
 					win.focus();
 				}
 		
@@ -158,9 +158,16 @@ else
 		while($m = $sentmessages->fetch_assoc())
 		{
 			$receivercount = $forum->count_message_receivers($m['message_ID'])->fetch_assoc();
+			$readstatus = 1;
+			$msgreceivers = $forum->get_message_receivers($m['message_ID']);
+			while($mr = $msgreceivers->fetch_assoc())
+			{
+				if($mr['readstatus'] == 0) {$readstatus = 0;}
+			}
+			
 			if($receivercount['res'] > 0)
 			{
-				echo "<tr><td>";
+				if($readstatus == 0) { echo "<tr><td class='unread'>"; } else { echo "<tr><td>"; }
 				echo "<a href='messages.php?mode=view&m=".$m['message_ID']."'>".$m['title']."</a>";
 				echo "</td>";
 				echo "<td>";
@@ -182,7 +189,7 @@ else
 					}
 				}
 				echo "</td>";
-				echo "<td> ".date("j. M Y G:i", strtotime($m['datetime']))."</td>";	
+				echo "<td> ".date("d.m.Y G:i", strtotime($m['datetime']))."</td>";	
 				echo "</tr>";
 			}
 		}
@@ -219,7 +226,7 @@ else
 				$activechars = $forum->count_all_accepted_active_characters_from_superuser($user['superuser_ID'])->fetch_assoc();
 				$overall_posts = $forum->count_all_posts_from_superuser($user['superuser_ID'])->fetch_assoc(); 
 				
-				echo "<b>Tilmeldt:</b> ".date("j. M Y", strtotime($user['date_joined']))."<br/>";
+				echo "<b>Tilmeldt:</b> ".date("d.m.Y", strtotime($user['date_joined']))."<br/>";
 				echo "<b>Aktive karakterer:</b> ".$activechars['res']."<br/>";
 				echo "<b>Posts:</b> ".$overall_posts['res']."<br/>";
 					
@@ -228,7 +235,7 @@ else
 				echo "<a href='messages.php?mode=view&m=".$message['message_ID']."' class='posttitle'>".$message['title']."</a>";
 				echo "<span class='postauthor'>";
 				echo "af <a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a>";
-				echo " » ".date("j. M Y G:i", strtotime($message['datetime']))."</span>";
+				echo " » ".date("d.m.Y G:i", strtotime($message['datetime']))."</span>";
 				
 				echo nl2br($parser->parse($message['text'])->getAsHtml());
 				if($user['signature'] != "")

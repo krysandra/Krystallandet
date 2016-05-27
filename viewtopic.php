@@ -198,6 +198,7 @@ if(isset($_GET['t']))
 		}
 		
 		$topicposters = array();
+		$topicpostertime = array();
 		$mychar = 0;	
 	
 		while($p = $posts->fetch_assoc())
@@ -209,8 +210,9 @@ if(isset($_GET['t']))
 				if ($posterchar['fk_superuser_ID'] != $user_logged_in_ID && $posterchar['dead'] == 0 && $posterchar['accepted'] == 1)
 				{
 					if (!in_array($posterchar, $topicposters)) {
-						array_push($topicposters, $posterchar);
+						$topicposters[$p['fk_character_ID']] = $posterchar;
 					}
+					$topicpostertime[$p['fk_character_ID']] = strtotime($p['datetime']);
 				}
 				else if ($posterchar['fk_superuser_ID'] == $user_logged_in_ID)
 				{
@@ -229,7 +231,7 @@ if(isset($_GET['t']))
 					if($p['fk_superuser_ID'] != 0)
 					{
 						$superuser = $forum->get_superuser($p['fk_superuser_ID'])->fetch_assoc();
-						echo "Skaber: <a class='username smalltext' href='memberprofile.php?id=".$superuser['superuser_ID']."'>".$superuser['name']."</a><br/><br/>";
+						echo "Skaber: <a class='username smalltext' href='memberprofile.php?id=".$superuser['superuser_ID']."' style='color:".$superuser['color'].";'>".$superuser['name']."</a><br/><br/>";
 					}
 				}
 				else
@@ -295,7 +297,7 @@ if(isset($_GET['t']))
 					{
 						echo "<img src='".$user['avatar']."' />";	
 					}
-					echo "<a class='username' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a><br/>";	
+					echo "<a class='username' href='memberprofile.php?id=".$user['superuser_ID']."' style='color:".$user['color'].";'>".$user['name']."</a><br/>";	
 					echo $user['title']."<br/><br/>";
 					
 					$activechars = $forum->count_all_accepted_active_characters_from_superuser($user['superuser_ID'])->fetch_assoc();
@@ -312,7 +314,7 @@ if(isset($_GET['t']))
 						$postrank = $forum->get_user_postrank($overall_posts['res'])->fetch_assoc();
 						echo "<b>Rang: </b>".$postrank['title']."<br/>";
 					}
-					echo "<b>Tilmeldt:</b> ".date("j. M Y", strtotime($user['date_joined']))."<br/>";
+					echo "<b>Tilmeldt:</b> ".date("d.m.Y", strtotime($user['date_joined']))."<br/>";
 					echo "<b>Aktive karakterer:</b> ".$activechars['res']."<br/>";
 					echo "<b>Trofæer:</b> ".$achievementnumber['res']."<br/>";
 					echo "<b>Posts:</b> ".$overall_posts['res']."<br/>";
@@ -347,10 +349,10 @@ if(isset($_GET['t']))
 				}
 				else
 				{
-					echo "af <a class='username' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a>"; 
+					echo "af <a class='username' href='memberprofile.php?id=".$user['superuser_ID']."' style='color:".$user['color'].";'>".$user['name']."</a>"; 
 				}
 			}
-			echo " » ".date("j. M Y G:i", strtotime($p['datetime']))."</span>";
+			echo " » ".date("d.m.Y G:i", strtotime($p['datetime']))."</span>";
 			echo "</div>";
 			
 			$lastpost = $forum->get_last_post($topic_id)->fetch_assoc();
@@ -376,7 +378,7 @@ if(isset($_GET['t']))
 			
 			$parser->parse($p['text']);
 			echo nl2br($parser->getAsHtml());
-			if($user['signature'] != "" && $p['fk_character_ID'] !=0 && $p['fk_superuser_ID'] != 0)
+			if($user['signature'] != "" && ($p['fk_character_ID'] !=0 || $p['fk_superuser_ID'] != 0))
 			{
 				echo "<div class='postsignature'>";
 				$parser->parse($user['signature']);
@@ -551,104 +553,109 @@ if(isset($_GET['t']))
 				}
 			}
 			
-			echo "<div id='quickreply'>";
-			echo "<span class='bold' style='cursor:pointer' onclick='showQuickReply()'>Hurtigt svar</span> ";
-				echo "<div id='postquickreply'>";
-				echo "<hr/>";
-				echo "<table>";
-				echo "<form name='postform' method='post' >";
-				echo "<tr><td>";
-				echo "<span class='bold'>Forfatter: ";
-
-				if ($viewforum['ingame'] == 0 || $user_rank == 0)
-				{
-					echo $user_name;
-					echo "<input type='hidden' name='poster' value='".$user_logged_in_ID."'/>";				
-				}
-		
-				if ($viewforum['ingame'] == 1 && $user_rank > 0)
-				{
-		
-					echo "<select name='poster'>";
-					$userchars = $forum->get_characters_from_superuser($user_logged_in_ID);
-					while ($char = $userchars->fetch_assoc())
-					{
-						//if the user has written with this character in the thread before, we want it to be default
-						if ($char['character_ID'] == $mychar)
-						{
-							echo "<option value='".$char['character_ID']."' selected>".$char['name']."</option>";	
-						}
-						else
-						{
-							echo "<option value='".$char['character_ID']."'>".$char['name']."</option>";	
-						}		
-					}		
-					echo "</select>";	
-				}	
-				echo "</td></tr>";	
-				echo "<tr><td>";
-				echo "<textarea name='posttext' class='postarea quickpostingtext'></textarea>";
-				echo "</td></tr>";
-				if ($viewforum['ingame'] == 1 && $user_rank > 0)
-				{
-					echo "<tr><td><span class='bold'>Angiv hvem der næste gang, skal svare i tråden:</span><br/><br/>";	
-	
-						if (count($topicposters) > 0)
-						{
-							echo "<input type='radio' name='nextposter' value='dropdown' required> Nuværende tråddeltager ";	
-							echo "<select name='nextposter_chosen'>";
-							foreach ($topicposters as $tp)
-							{
-								echo "<option value='".$tp['name']."'>".$tp['name']."</option>";
-							}
-							echo "</select>";
-							echo "<br/>";
-							echo "<br/>";
-						}
-			
-						echo "<input type='radio' name='nextposter' value='textinput' id='nextposter_radio' required> ";				
-						echo "<input type='text' name='nextposter_value' id='nextposter_value'/>";
-						?>
-			
-						<a class="smallbutton" href="" onclick="popup('findcharacter.php'); return false;">Find karakter</a>
-			
-						<script type="text/javascript">
-							function popup (url) {
-								win = window.open(url, "window1", "width=820,height=580,status=no,scrollbars=no,resizable=yes");
-								win.focus();
-							}
-			
-						</script>
-			
-						<?php
-			
-						echo"<br/>";			
-						echo "<input type='radio' name='nextposter' value='no_tag_wanted' required>Jeg ønsker ikke at angive den næste i tråden";	
-				}
-					echo "</td></tr><span class='errormsg'>".$errormsg."</span>";	
-				echo "<tr><td class='center'><input type='submit' name='submit_quickreply' value='Besvar emne'/></td></tr>
-				</form></table>";
-				echo "</div>";
-			echo "</div>"; ?>
-			
-			<script>
-			document.getElementById('postquickreply').style.display = 'none';
-			function showQuickReply()
+			if($viewtopic['locked'] != 1 && $user_rank >= $viewforum['write_access'])
 			{
-				if(document.getElementById('postquickreply').style.display == 'none')
-				{
-					document.getElementById('postquickreply').style.display = 'block';	
-				}
-				else
-				{
-					document.getElementById('postquickreply').style.display = 'none';	
-				}
-			}
-			</script>
 			
-            <?php
+				echo "<div id='quickreply'>";
+				echo "<span class='bold' style='cursor:pointer' onclick='showQuickReply()'>Hurtigt svar</span> ";
+					echo "<div id='postquickreply'>";
+					echo "<hr/>";
+					echo "<table>";
+					echo "<form name='postform' method='post' >";
+					echo "<tr><td>";
+					echo "<span class='bold'>Forfatter: ";
+	
+					if ($viewforum['ingame'] == 0 || $user_rank == 0)
+					{
+						echo $user_name;
+						echo "<input type='hidden' name='poster' value='".$user_logged_in_ID."'/>";				
+					}
 			
+					if ($viewforum['ingame'] == 1 && $user_rank > 0)
+					{
+			
+						echo "<select name='poster'>";
+						$userchars = $forum->get_characters_from_superuser($user_logged_in_ID);
+						while ($char = $userchars->fetch_assoc())
+						{
+							//if the user has written with this character in the thread before, we want it to be default
+							if ($char['character_ID'] == $mychar)
+							{
+								echo "<option value='".$char['character_ID']."' selected>".$char['name']."</option>";	
+							}
+							else
+							{
+								echo "<option value='".$char['character_ID']."'>".$char['name']."</option>";	
+							}		
+						}		
+						echo "</select>";	
+					}	
+					echo "</td></tr>";	
+					echo "<tr><td>";
+					echo "<textarea name='posttext' class='postarea quickpostingtext'></textarea>";
+					echo "</td></tr>";
+					if ($viewforum['ingame'] == 1 && $user_rank > 0)
+					{
+						echo "<tr><td><span class='bold'>Angiv hvem der næste gang, skal svare i tråden:</span><br/><br/>";	
+		
+							if (count($topicposters) > 0)
+							{
+								echo "<input type='radio' name='nextposter' value='dropdown' required> Nuværende tråddeltager ";	
+								echo "<select name='nextposter_chosen'>";
+								foreach ($topicpostertime as $tpid => $time)
+								{
+									$tp = $topicposters[$tpid];
+									echo "<option value='".$tp['name']."'>".$tp['name']."</option>";
+								}
+								echo "</select>";
+								echo "<br/>";
+								echo "<br/>";
+							}
+				
+							echo "<input type='radio' name='nextposter' value='textinput' id='nextposter_radio' required> ";				
+							echo "<input type='text' name='nextposter_value' id='nextposter_value'/>";
+							?>
+				
+							<a class="smallbutton" href="" onclick="popup('findcharacter.php'); return false;">Find karakter</a>
+				
+							<script type="text/javascript">
+								function popup (url) {
+									win = window.open(url, "window1", "width=820,height=580,status=no,scrollbars=1,resizable=yes");
+									win.focus();
+								}
+				
+							</script>
+				
+							<?php
+				
+							echo"<br/>";			
+							echo "<input type='radio' name='nextposter' value='no_tag_wanted' required>Jeg ønsker ikke at angive den næste i tråden";	
+					}
+						echo "</td></tr><span class='errormsg'>".$errormsg."</span>";	
+					echo "<tr><td class='center'><input type='submit' name='submit_quickreply' value='Besvar emne'/></td></tr>
+					</form></table>";
+					echo "</div>";
+				echo "</div>"; ?>
+				
+				<script>
+				document.getElementById('postquickreply').style.display = 'none';
+				function showQuickReply()
+				{
+					if(document.getElementById('postquickreply').style.display == 'none')
+					{
+						document.getElementById('postquickreply').style.display = 'block';	
+					}
+					else
+					{
+						document.getElementById('postquickreply').style.display = 'none';	
+					}
+				}
+				</script>
+				
+				<?php
 			}
+				
+				}
 			
 			echo "<div class='pagenavigaton'>";
 	
@@ -791,5 +798,6 @@ else
 }
 ?>
 <?php
+$pagetitle = $viewtopic['title']." - ";
 include('footer.php');
 ?>

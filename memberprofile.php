@@ -34,8 +34,8 @@ if(isset($_GET['id']))
 				$overall_posts = $forum->count_all_posts_from_superuser($id)->fetch_assoc(); 
 				echo "<span class='userprofiletabletext'>Antal posts (I alt): </span>".$overall_posts['res']."<br/>";
 	
-				echo "<span class='userprofiletabletext'>Medlem siden: </span>".date("j. M Y", strtotime($member['date_joined']))."<br/>";
-				echo "<span class='userprofiletabletext'>Sidst aktiv: </span>".date("j. M Y G:i", strtotime($member['last_active']))."<br/>";
+				echo "<span class='userprofiletabletext'>Medlem siden: </span>".date("d.m.Y", strtotime($member['date_joined']))."<br/>";
+				echo "<span class='userprofiletabletext'>Sidst aktiv: </span>".date("d.m.Y G:i", strtotime($member['last_active']))."<br/>";
 				if($member['fk_role_ID'] > 1)
 				{
 					$role = $forum->get_role($member['fk_role_ID'])->fetch_assoc();
@@ -377,7 +377,7 @@ if(isset($_GET['showposts']))
 				}
 				echo "<a class='username' style='color:".$member['color'].";'  href='memberprofile.php?id=".$member['superuser_ID']."'>".$member['name']." </a><br/>";	
 			}			
-			echo date("j. M Y G:i", strtotime($p['datetime']));
+			echo date("d.m.Y G:i", strtotime($p['datetime']));
 			echo "<br/><br/>";
 			
 			echo "<b>Forum:</b> <a href='viewforum.php?f=".$currentforum['forum_ID']."'>".$currentforum['title']."</a><br/>";
@@ -595,7 +595,7 @@ if(isset($_GET['showtopics']))
 				}
 			}	
 			echo "<a href='viewtopic.php?t=".$t['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'><img src='images/icon_topic_latest.gif' title='Gå til post'/></a>";	
-			echo "&raquo; ".date("j. M Y G:i", strtotime($t['datetime']));
+			echo "&raquo; ".date("d.m.Y G:i", strtotime($t['datetime']));
 			if($t['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$t['warning']."</span>"; } else { echo "<br/>"; }
 			echo "i <a class='topictitle' href='viewforum.php?f=".$t['forum_ID']."'>".$t['forumtitle']."</a>";
 			echo "</td>";
@@ -628,7 +628,7 @@ if(isset($_GET['showtopics']))
 			}	
 			echo "<a href='viewtopic.php?t=".$t['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'><img src='images/icon_topic_latest.gif' title='Gå til post'/></a>";
 			echo "</br>";	
-			echo date("j. M Y G:i", strtotime($lastpost['datetime']))."</td>";
+			echo date("d.m.Y G:i", strtotime($lastpost['datetime']))."</td>";
 			echo "</tr>";
 		}
 		echo "</table>";

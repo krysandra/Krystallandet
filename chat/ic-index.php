@@ -84,11 +84,11 @@ $forum = new dbFunctions();
         
          <script type="text/javascript">
 			function popup (url) {
-				win = window.open(url, "window1", "width=300,height=300,status=no,scrollbars=no,resizable=no,top=300, left=500");
+				win = window.open(url, "window1", "scrollbars=1, width=300,height=300,status=no,scrollbars=no,resizable=no,top=300, left=500");
 					win.focus();
 				}
 			function olderchatmsg (url) {
-				win = window.open(url, "window2", "width=800,height=600,status=no,scrollbars=no,resizable=no,top=300, left=500");
+				win = window.open(url, "window2", "scrollbars=1, width=800,height=600,status=no,scrollbars=no,resizable=no,top=300, left=500");
 					win.focus();
 				}
 		</script>

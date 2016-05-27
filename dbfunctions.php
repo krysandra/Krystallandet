@@ -17,7 +17,7 @@ class dbFunctions
 		$this->db_username = "krystallandet_d";
 		$this->db_password = "qRXVhc4j";
 		$this->db_name = "krystallandet_d";
-		$this->prefix = "krystallandet";
+		$this->prefix = "test";
 		$this->conn = new mysqli($this->db_host, $this->db_username, $this->db_password, $this->db_name);		
 		if ($this->conn->connect_error) {
 			die("Connection failed: " . $conn->connect_error);

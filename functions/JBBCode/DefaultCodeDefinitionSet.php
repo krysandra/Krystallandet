@@ -8,6 +8,7 @@ require_once 'CodeDefinitionSet.php';
 require_once 'validators/CssColorValidator.php';
 require_once 'validators/UrlValidator.php';
 require_once 'validators/NumberValidator.php';
+require_once 'validators/TextValidator.php';
 
 /**
  * Provides a default set of common bbcode definitions.

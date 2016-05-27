@@ -258,7 +258,7 @@ if(isset($_GET['f']))
 				echo "</tr>";	
 		
 				echo "<tr><td class='bold'>Titel: </td>";		
-				echo "<td><input class='postinginput titleinput' type='text' name='title' value='".htmlspecialchars($topic_title, ENT_QUOTES, 'UTF-8')."' required/></td>";			
+				echo "<td><input class='postinginput titleinput' type='text' name='title' value='".htmlspecialchars($topic_title, ENT_QUOTES, 'UTF-8')."' maxlength='65' required/></td>";			
 				echo "</tr>";
 				echo "<tr><td colspan='2'>";		
 				echo "<textarea name='posttext' class='postarea postingtext'>".$topic_text."</textarea></td>";			
@@ -302,7 +302,7 @@ if(isset($_GET['f']))
 		
 					<script type="text/javascript">
 						function popup (url) {
-							win = window.open(url, "window1", "width=820,height=580,status=no,scrollbars=no,resizable=yes");
+							win = window.open(url, "window1", "scrollbars=1, width=820,height=580,status=no,resizable=yes");
 							win.focus();
 						}
 					</script>
@@ -595,6 +595,7 @@ if(isset($_GET['t']))
 				echo "<form name='postform' method='post' >";
 				
 				$topicposters = array();
+				$topicpostertime = array();
 				$mychar = 0;	
 				$topicposts = $forum->get_all_posts($t);	
 				
@@ -606,8 +607,9 @@ if(isset($_GET['t']))
 						if ($posterchar['fk_superuser_ID'] != $user_id && $posterchar['dead'] == 0 && $posterchar['accepted'] == 1)
 						{
 							if (!in_array($posterchar, $topicposters)) {
-								array_push($topicposters, $posterchar);
+								$topicposters[$currentpost['fk_character_ID']] = $posterchar;
 							}
+							$topicpostertime[$currentpost['fk_character_ID']] = strtotime($currentpost['datetime']);
 						}
 						else
 						{
@@ -616,6 +618,8 @@ if(isset($_GET['t']))
 					//}	
 					
 				}
+				
+				arsort($topicpostertime);
 		
 				echo "<tr><td class='bold'>Forfatter: </td>";
 
@@ -667,8 +671,9 @@ if(isset($_GET['t']))
 					{
 						echo "<input type='radio' name='nextposter' value='dropdown' required> Nuværende tråddeltager ";	
 						echo "<select name='nextposter_chosen'>";
-						foreach ($topicposters as $tp)
+						foreach ($topicpostertime as $tpid => $time)
 						{
+							$tp = $topicposters[$tpid];
 							echo "<option value='".$tp['name']."'>".$tp['name']."</option>";
 						}
 						echo "</select>";
@@ -684,7 +689,7 @@ if(isset($_GET['t']))
 		
 					<script type="text/javascript">
 						function popup (url) {
-							win = window.open(url, "window1", "width=820,height=580,status=no,scrollbars=no,resizable=yes");
+							win = window.open(url, "window1", "width=820,height=580,status=no,scrollbars=1,resizable=yes");
 							win.focus();
 						}
 		
@@ -973,7 +978,7 @@ else if(isset($_GET['edit']))
 				{
 					echo "<input type='hidden' name='edittype' value='topic'/>";
 					echo "<tr><td class='bold'>Titel: </td>";		
-					echo "<td><input type='text' name='title' class='postinginput' value='".htmlspecialchars($topic_to_edit['title'], ENT_QUOTES, 'UTF-8')."' required/></td>";			
+					echo "<td><input type='text' name='title' class='postinginput' value='".htmlspecialchars($topic_to_edit['title'], ENT_QUOTES, 'UTF-8')."' maxlength='65' required/></td>";			
 					echo "</tr>";
 				}
 				else
@@ -985,7 +990,7 @@ else if(isset($_GET['edit']))
 				}
 				
 				echo "<tr><td colspan='2'>";
-				echo "<textarea name='posttext' class='postarea postingtext'>".htmlspecialchars($post_to_edit['text'], ENT_QUOTES, 'UTF-8')."</textarea></td>";		
+				echo "<textarea name='posttext' class='postarea postingtext'>".$post_to_edit['text']."</textarea></td>";		
 				echo "</tr>";
 				echo "</table>";
 		
@@ -1029,7 +1034,7 @@ else if(isset($_GET['edit']))
 					}
 					
 					if (count($topicposters) > 0)
-					{
+					{/*
 						echo "<input type='radio' name='nextposter' value='dropdown' required> Nuværende tråddeltager ";	
 						echo "<select name='nextposter_chosen'>";
 						foreach ($topicposters as $tp)
@@ -1038,6 +1043,7 @@ else if(isset($_GET['edit']))
 						}
 						echo "</select>";
 						echo "<br/>";
+						*/
 					}
 					echo "<input type='radio' name='nextposter' value='textinput' id='nextposter_radio' required> ";		
 					echo "<input type='text' name='nextposter_value' id='nextposter_value'/>";
@@ -1046,7 +1052,7 @@ else if(isset($_GET['edit']))
 		
 					<script type="text/javascript">
 						function popup (url) {
-							win = window.open(url, "window1", "width=820,height=580,status=no,scrollbars=no,resizable=yes");
+							win = window.open(url, "window1", "width=820,height=580,status=no,scrollbars=1,resizable=yes");
 							win.focus();
 						}
 					</script>
@@ -1065,7 +1071,6 @@ else if(isset($_GET['edit']))
 					echo "<input type='hidden' name='nextposter' value='no_tag_wanted'/>";
 				}
 				
-					echo "<hr/>";
 					echo "<table class='postingtable'>";
 				//A warning can be added if it is the first post
 				if($firstpost['post_ID'] == $post_id && $postforum['ingame'] == 1 && $postforum['official'] == 1)
@@ -1196,9 +1201,10 @@ else if(isset($_GET['delete']))
 		$post_to_delete = $forum->get_post($post_id)->fetch_assoc();	
 		$topic_to_delete = $forum->get_topic($post_to_delete['fk_topic_ID'])->fetch_assoc();
 		$lastpost = $forum->get_last_post($topic_to_delete['topic_ID'])->fetch_assoc();
+		$forummod = $forum->forummod_exists($topic_to_delete['fk_forum_ID'], $user_logged_in_ID)->fetch_assoc();
 		$postdatetime = $post_to_delete['datetime'];
 		
-		if($user_rank > 1 || $forummod['res'] > 0 || ($superuser['superuser_ID'] == $user_logged_in_ID && $lastpost['post_ID'] == $post_id))
+		if($user_rank > 1 || $forummod['res'] > 0 || ($post_to_delete['fk_superuser_ID'] == $user_logged_in_ID && $lastpost['post_ID'] == $post_id))
 		{
 			$deletepost = $forum->delete_post($post_id);
 			$numofposts = $forum->get_numberof_posts($topic_to_delete['topic_ID'])->fetch_assoc();
@@ -1223,12 +1229,13 @@ else if(isset($_GET['delete']))
 					$forum->delete_poll($topicpoll['poll_ID']);
 				}
 				$deletetopic = $forum->delete_topic($topic_to_delete['topic_ID']);
-				header('Location:viewforum.php?f='.$topic_to_delete["fk_forum_ID"]);	
+				header('Location:viewforum.php?f='.$topic_to_delete["fk_forum_ID"]);
+				exit;	
 			}
 		}		
 		
 		$prevpost = $forum->get_previous_post($postdatetime)->fetch_assoc();
-		header('Location:viewforum.php?f='.$topic_to_delete["topic_ID"].'#'.$prevpost["post_ID"]);	
+		header('Location:viewtopic.php?t='.$topic_to_delete["topic_ID"].'#'.$prevpost["post_ID"]);	
 		
 	} // End if post exists
 	

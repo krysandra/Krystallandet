@@ -114,8 +114,9 @@ $forum = new dbFunctions();
 			 $reg_exWink = "/;\)/"; 
 			 $reg_exSad = "/:\(/"; 
 			 $reg_exCry = "/:cry:/"; 
+			 $reg_exHeart = "/\<3/"; 
 			 
-			  $message = htmlentities(strip_tags($_POST['message']));
+			  	$message = htmlentities($_POST['message']);
 		 	   if(($message) != "\n"){
         	
 			    if(preg_match($reg_exUrl, $message, $url))

@@ -56,6 +56,10 @@ $builder = new JBBCode\CodeDefinitionBuilder('size', '<span class="bbsize-{optio
 $builder->setUseOption(true)->setOptionValidator(new \JBBCode\validators\NumberValidator());
 $parser->addCodeDefinition($builder->build());
 
+$builder = new JBBCode\CodeDefinitionBuilder('font', '<span class="font-family:{option}">{param}</span>');
+$builder->setUseOption(true)->setOptionValidator(new \JBBCode\validators\TextValidator());
+$parser->addCodeDefinition($builder->build());
+
 $builder = new JBBCode\CodeDefinitionBuilder('center', '<div style="text-align:center;">{param}</div>');
 $parser->addCodeDefinition($builder->build());
 
@@ -91,6 +95,8 @@ $builder = new JBBCode\CodeDefinitionBuilder('code', '<div class="code">{param}<
 $builder->setParseContent(false);
 $parser->addCodeDefinition($builder->build());
 
+
+$pagetitle = "";
 ?>
 <!DOCTYPE html>
 <html>

@@ -186,7 +186,7 @@ if(isset($_GET['f']))
 					else
 					{
 						$user = $forum->get_superuser($t['fk_superuser_ID'])->fetch_assoc();
-						echo "Af <a class='username' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a> ";
+						echo "Af <a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a> ";
 					}
 				}	
 				echo " &raquo; ".date("j. M Y G:i", strtotime($t['datetime']));
@@ -220,7 +220,7 @@ if(isset($_GET['f']))
 					else
 					{
 						$user = $forum->get_superuser($lastpost['fk_superuser_ID'])->fetch_assoc();
-						echo "af <a class='username' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a> ";
+						echo "af <a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a> ";
 					}
 				}	
 				echo "<a href='viewtopic.php?t=".$t['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'><img src='images/icon_topic_latest.gif' title='Gå til post'/></a>";
