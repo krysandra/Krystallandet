@@ -18,11 +18,58 @@ else
 	
 	echo "<div id='forumpage'>";
 	
-	if(empty($_GET))
+	if(!isset($_GET['mode']))
 	{
-		$inboxmessages = $forum->get_messages_sent_to_user($user_logged_in_ID); 
 		
 		echo "<div class='category'><a href=''>Indbakke</a></div>";
+		
+		$msgnumber = $forum->count_messages_sent_to_user($user_logged_in_ID)->fetch_assoc();
+		$totalpages = ceil($msgnumber['res'] / $messagesperpage);
+		
+		echo "<div class='topforumpagenavigaton'>";
+	
+		if (isset($_GET['currentpage']) && is_numeric($_GET['currentpage'])) {  $currentpage = (int) $_GET['currentpage']; }
+		else { $currentpage = 1; } 
+	
+		if ($currentpage > $totalpages) { $currentpage = $totalpages; } 
+		if ($currentpage < 1) { $currentpage = 1; } 
+	
+		$offset = ($currentpage - 1) * $messagesperpage;
+		
+		$inboxmessages = $forum->get_messages_sent_to_user($user_logged_in_ID, $offset, $messagesperpage); 
+	
+		$range = 4;
+	
+		if ($currentpage > 1) 
+		{ 
+			$prevpage = $currentpage - 1;
+			echo " <a class='navlink' href='messages.php?currentpage=$prevpage'>«</a> ";
+			if ($currentpage - $range > 1) 
+			{
+				echo " <a class='navlink' href='messages.php?currentpage=1'>1</a> ";
+			}
+		} 
+	
+		for ($x = ($currentpage - $range); $x < (($currentpage + $range)  + 1); $x++) 
+		{
+		   if (($x > 0) && ($x <= $totalpages)) 
+		   {
+			  if ($x == $currentpage) { if($totalpages > 1) { echo " <span class='navlink_active'><b>$x</b></span>"; } } 
+			  else { echo " <a class='navlink' href='messages.php?currentpage=$x'>$x</a> "; } 
+		   }  
+		} 
+	
+		if ($currentpage != $totalpages) 
+		{
+		   $nextpage = $currentpage + 1;
+		   if ($totalpages - $range > $currentpage) { echo " <a class='navlink' href='messages.php?currentpage=$totalpages'>".$totalpages."</a> "; }
+		   if ($totalpages > 1) { echo " <a class='navlink' href='messages.php?currentpage=$nextpage'>»</a> "; }
+		} 
+	
+		echo "</div>";
+		/****** end build pagination links ******/
+		
+		
 		echo "<table id='msgbox'>";
 		echo "<tr><th>Emne</th><th>Afsender</th><th>Dato</th><th></th></tr>";
 		
@@ -44,6 +91,38 @@ else
 		}
 		
 		echo "</table>";
+		
+		echo "<div class='pagenavigaton'>";
+
+		if ($currentpage > 1) 
+		{ 
+			$prevpage = $currentpage - 1;
+			echo " <a class='navlink' href='messages.php?currentpage=$prevpage'>«</a> ";
+			if ($currentpage - $range > 1) 
+			{
+				echo " <a class='navlink' href='messages.php?currentpage=1'>1</a> ";
+			}
+		} 
+	
+		for ($x = ($currentpage - $range); $x < (($currentpage + $range)  + 1); $x++) 
+		{
+		   if (($x > 0) && ($x <= $totalpages)) 
+		   {
+			  if ($x == $currentpage) { if($totalpages > 1) { echo " <span class='navlink_active'><b>$x</b></span>"; } } 
+			  else { echo " <a class='navlink' href='messages.php?currentpage=$x'>$x</a> "; } 
+		   }  
+		} 
+	
+		if ($currentpage != $totalpages) 
+		{
+		   $nextpage = $currentpage + 1;
+		   if ($totalpages - $range > $currentpage) { echo " <a class='navlink' href='messages.php?currentpage=$totalpages'>".$totalpages."</a> "; }
+		   if ($totalpages > 1) { echo " <a class='navlink' href='messages.php?currentpage=$nextpage'>»</a> "; }
+		} 
+	
+		echo "</div>";
+		/****** end build pagination links ******/
+		
 	}
 	
 	if($_GET['mode'] == "new")
@@ -150,13 +229,59 @@ else
 		
 		echo "</table>";
 		echo "</div>";
+
 	}
 	
 	if($_GET['mode'] == "sent")
 	{
-		$sentmessages = $forum->get_messages_send_by_user($user_logged_in_ID); 
-		
 		echo "<div class='category'><a href=''>Sendte Beskeder</a></div>";
+		
+		$msgnumber = $forum->count_messages_sent_by_user($user_logged_in_ID)->fetch_assoc();
+		$totalpages = ceil($msgnumber['res'] / $messagesperpage);
+		
+		echo "<div class='topforumpagenavigaton'>";
+	
+		if (isset($_GET['currentpage']) && is_numeric($_GET['currentpage'])) {  $currentpage = (int) $_GET['currentpage']; }
+		else { $currentpage = 1; } 
+	
+		if ($currentpage > $totalpages) { $currentpage = $totalpages; } 
+		if ($currentpage < 1) { $currentpage = 1; } 
+	
+		$offset = ($currentpage - 1) * $messagesperpage;
+		
+		$sentmessages = $forum->get_messages_sent_by_user($user_logged_in_ID, $offset, $messagesperpage);  
+	
+		$range = 4;
+	
+		if ($currentpage > 1) 
+		{ 
+			$prevpage = $currentpage - 1;
+			echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$prevpage'>«</a> ";
+			if ($currentpage - $range > 1) 
+			{
+				echo " <a class='navlink' href='messages.php?mode=sent&currentpage=1'>1</a> ";
+			}
+		} 
+	
+		for ($x = ($currentpage - $range); $x < (($currentpage + $range)  + 1); $x++) 
+		{
+		   if (($x > 0) && ($x <= $totalpages)) 
+		   {
+			  if ($x == $currentpage) { if($totalpages > 1) { echo " <span class='navlink_active'><b>$x</b></span>"; } } 
+			  else { echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$x'>$x</a> "; } 
+		   }  
+		} 
+	
+		if ($currentpage != $totalpages) 
+		{
+		   $nextpage = $currentpage + 1;
+		   if ($totalpages - $range > $currentpage) { echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$totalpages'>".$totalpages."</a> "; }
+		   if ($totalpages > 1) { echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$nextpage'>»</a> "; }
+		} 
+	
+		echo "</div>";
+		/****** end build pagination links ******/
+		
 		echo "<table id='msgbox'>";
 		echo "<tr><th>Emne</th><th>Modtager</th><th>Dato</th></tr>";
 		
@@ -169,9 +294,6 @@ else
 			{
 				if($mr['readstatus'] == 0) {$readstatus = 0;}
 			}
-			
-			if($receivercount['res'] > 0)
-			{
 				if($readstatus == 0) { echo "<tr><td class='unread'>"; } else { echo "<tr><td>"; }
 				echo "<a href='messages.php?mode=view&m=".$m['message_ID']."'>".$m['title']."</a>";
 				echo "</td>";
@@ -184,7 +306,7 @@ else
 				{
 					if($receivercount['res'] < 1)
 					{
-						echo "<span class='italic'>ikke længere eksisterende bruger </span>";	
+						echo "<span class='italic'>Slettet bruger</span>";	
 					}
 					else
 					{
@@ -201,10 +323,40 @@ else
 				<?php echo "><img src='images/topic_delete.png' title='Slet post'/></a> ";
 				echo "</td>";	
 				echo "</tr>";
-			}
 		}
 		
 		echo "</table>";
+		
+		echo "<div class='pagenavigaton'>";
+
+		if ($currentpage > 1) 
+		{ 
+			$prevpage = $currentpage - 1;
+			echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$prevpage'>«</a> ";
+			if ($currentpage - $range > 1) 
+			{
+				echo " <a class='navlink' href='messages.php?mode=sent&currentpage=1'>1</a> ";
+			}
+		} 
+	
+		for ($x = ($currentpage - $range); $x < (($currentpage + $range)  + 1); $x++) 
+		{
+		   if (($x > 0) && ($x <= $totalpages)) 
+		   {
+			  if ($x == $currentpage) { if($totalpages > 1) { echo " <span class='navlink_active'><b>$x</b></span>"; } } 
+			  else { echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$x'>$x</a> "; } 
+		   }  
+		} 
+	
+		if ($currentpage != $totalpages) 
+		{
+		   $nextpage = $currentpage + 1;
+		   if ($totalpages - $range > $currentpage) { echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$totalpages'>".$totalpages."</a> "; }
+		   if ($totalpages > 1) { echo " <a class='navlink' href='messages.php?mode=sent&currentpage=$nextpage'>»</a> "; }
+		} 
+	
+		echo "</div>";
+		/****** end build pagination links ******/
 	}
 	
 	if($_GET['mode'] == "view")

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="config.php" server="ftp.krystallandet.dk" local="131108977381919153" remote="131108905200000000" Dst="2" />
+<file name="config.php" server="ftp.krystallandet.dk" local="131114937551786068" remote="131114865000000000" Dst="2" />
 <file name="memberlist.php" server="ftp.krystallandet.dk" local="131113401265537164" remote="131113329000000000" Dst="2" />
-<file name="dbfunctions.php" server="ftp.krystallandet.dk" local="131114359810000000" remote="131114287800000000" Dst="2" />
+<file name="dbfunctions.php" server="ftp.krystallandet.dk" local="131114937910896608" remote="131114865600000000" Dst="2" />
 <file name="header.php" server="ftp.krystallandet.dk" local="131114365551906403" remote="131114293200000000" Dst="2" />
 <file name="footer.php" server="ftp.krystallandet.dk" local="131114365381886678" remote="131114293200000000" Dst="2" />
 <file name="style.css" server="ftp.krystallandet.dk" local="131030320537231959" remote="131094471600000000" Dst="2" />
@@ -23,7 +23,7 @@
 <file name="acp.php" server="ftp.krystallandet.dk" local="131109779426712367" remote="131109707400000000" Dst="2" />
 <file name="test.php" server="ftp.krystallandet.dk" local="131033194210000000" remote="131094471600000000" Dst="2" />
 <file name="register.php" server="ftp.krystallandet.dk" local="131083090709325758" remote="131094471600000000" Dst="2" />
-<file name="messages.php" server="ftp.krystallandet.dk" local="131114357833534937" remote="131114285400000000" Dst="2" />
+<file name="messages.php" server="ftp.krystallandet.dk" local="131114937639631092" remote="131114865600000000" Dst="2" />
 <file name="findsuperuser.php" server="ftp.krystallandet.dk" local="131082432829539184" remote="131082360600000000" Dst="2" />
 <file name="search.pjp" server="ftp.krystallandet.dk" local="131006475600000000" remote="131094471600000000" Dst="2" />
 <file name="search.php" server="ftp.krystallandet.dk" local="131114914009249512" remote="131114841600000000" Dst="2" />

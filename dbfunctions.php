@@ -2481,19 +2481,38 @@ class dbFunctions
 	
 	/* Private messages */
 	
-	public function get_messages_sent_to_user($id)
+	public function get_messages_sent_to_user($id, $offset, $limit)
 	{
 		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_messagereceivers r INNER JOIN ".$this->prefix."_messages m
-		ON r.fk_message_ID = m.message_ID WHERE fk_receiver_ID = ? AND deleted != 1 ORDER BY m.datetime DESC");
+		ON r.fk_message_ID = m.message_ID WHERE fk_receiver_ID = ? AND deleted != 1 ORDER BY m.datetime DESC LIMIT ?, ?");
+		$query->bind_param('iii', $id, $offset, $limit);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();	
+	}
+	
+	public function count_messages_sent_to_user($id)
+	{
+		$query = $this->conn->prepare("SELECT COUNT(message_ID) AS res FROM ".$this->prefix."_messagereceivers r INNER JOIN ".$this->prefix."_messages m
+		ON r.fk_message_ID = m.message_ID WHERE fk_receiver_ID = ? AND deleted != 1");
 		$query->bind_param('i', $id);
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();	
 	}
 	
-	public function get_messages_send_by_user($id)
+	public function get_messages_sent_by_user($id, $offset, $limit)
 	{
-		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_messages WHERE fk_sender_ID = ? AND sender_delete != 1 ORDER BY datetime DESC");
+		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_messages WHERE fk_sender_ID = ? AND sender_delete != 1 ORDER BY datetime DESC LIMIT ?, ?");
+		$query->bind_param('iii', $id, $offset, $limit);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();	
+	}
+	
+	public function count_messages_sent_by_user($id)
+	{
+		$query = $this->conn->prepare("SELECT COUNT(message_ID) AS res FROM ".$this->prefix."_messages WHERE fk_sender_ID = ? AND sender_delete != 1");
 		$query->bind_param('i', $id);
 		$query->execute();		
 		/* Get the result */

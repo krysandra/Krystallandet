@@ -54,6 +54,7 @@ setlocale(LC_ALL, 'da_DA');
 $postsperpage = 20;
 $topicsperpage = 50;
 $usersperpage = 50;
+$messagesperpage = 50;
 
 $inactivecolor = "#919191";
 $deadcolor = "#656565";
