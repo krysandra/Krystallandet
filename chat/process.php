@@ -55,7 +55,7 @@ $forum = new dbFunctions();
 					 {
 						 if(strtotime($chatmsg['datetime']) > $state)
 						 {
-							 $text[] = $chatmsg['message']; 
+							 $text[] = nl2br($chatmsg['message']); 
 							 $usernames[] = $chatmsg['username'];
 							 $links[] = $chatmsg['link']; 
 							 $titles[] = $chatmsg['title']; 
@@ -91,12 +91,12 @@ $forum = new dbFunctions();
              break;
     	 
     	 case('send'):
-		  	 $nickname = htmlentities(strip_tags($_POST['nickname']));
-			 $title = htmlentities(strip_tags($_POST['title']));
-			 $chatimg = htmlentities(strip_tags($_POST['chatimg']));
-			 $chatlink = htmlentities(strip_tags($_POST['chatlink']));
-			 $chatcolor = htmlentities(strip_tags($_POST['chatcolor']));
-			 $userid = htmlentities(strip_tags($_POST['userid']));
+		  	 $nickname = htmlspecialchars($_POST["nickname"], ENT_QUOTES, 'UTF-8');
+			 $title = htmlspecialchars($_POST["title"], ENT_QUOTES, 'UTF-8');
+			 $chatimg = htmlspecialchars($_POST["chatimg"], ENT_QUOTES, 'UTF-8');
+			 $chatlink = htmlspecialchars($_POST["chatlink"], ENT_QUOTES, 'UTF-8');
+			 $chatcolor = htmlspecialchars($_POST["chatcolor"], ENT_QUOTES, 'UTF-8');
+			 $userid = htmlspecialchars($_POST["userid"], ENT_QUOTES, 'UTF-8');
 			 
 			 $reg_exUrl = "/(http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(\/\S*)?/";
 			 $reg_exItalic = "#\[i\](.+)\[\/i\]#iUs";
@@ -116,7 +116,8 @@ $forum = new dbFunctions();
 			 $reg_exCry = "/:cry:/"; 
 			 $reg_exHeart = "/\<3/"; 
 			 
-			  	$message = htmlentities($_POST['message']);
+			  	$message = htmlspecialchars($_POST["message"], ENT_QUOTES, 'UTF-8');
+				
 		 	   if(($message) != "\n"){
         	
 			    if(preg_match($reg_exUrl, $message, $url))

@@ -24,6 +24,7 @@ else
 		echo "<a href='mcp.php?mode=wantedlist'>Efterlysninger"; 
 		if ($wantedposts_need_approval['res'] > 0) { echo " (".$wantedposts_need_approval['res'].")"; } echo "</a>"; 
 		echo "<a href='mcp.php?mode=achievements'>Trofæer</a>";
+		echo "<a href='mcp.php?mode=chat'>Chatbeskeder</a>";
 		echo "</div></div>";
 
 		if(empty($_GET))
@@ -1144,6 +1145,69 @@ else
 			echo "</div></div>";
 			
 		} // End achievements
+		
+		if($_GET['mode'] == 'chat')
+		{
+			if($_POST['delete_chatmsg'])
+			{
+				$msgid = $_POST['msgid'];
+				$forum->delete_chat_message($msgid);
+				header('Location:mcp.php?mode=chat');
+			}
+			if($_POST['delete_icchatmsg'])
+			{
+				$msgid = $_POST['msgid'];
+				$forum->delete_ic_chat_message($msgid);
+				header('Location:mcp.php?mode=chat');
+			}
+			
+			
+			$confirmmsg = "";
+			echo "<div id='acp_page'>";
+			echo "<div class='category'><a href=''>Chatbeskeder</a></div>";
+			echo "<div id='acp_content' class='center'>";
+			
+			$chatdata = $forum->get_chat_messages();
+			echo "<h4>20 seneste chatbox-beskeder:</h4>";
+			echo "<table>";
+			while($chatmsg = $chatdata->fetch_assoc())
+			{
+				echo "<tr><td style='border:1px solid #c5c5c5; padding: 5px;'>";
+				echo $chatmsg['message'];
+				echo "</td>";
+				echo "<form method='post'>";
+				echo "<input type='hidden' name='msgid' value='".$chatmsg['chat_ID']."'/>";
+				echo "<td style='border:1px solid #c5c5c5; padding: 5px;'><input type='submit' name='delete_chatmsg' value='Slet chatbesked' "; ?>
+						onclick='return confirm("Er du sikker på, at du vil fjerne denne besked?")'
+						<?php echo "/></td>";
+				echo "</form>";
+				echo "</tr>";
+			}
+			echo "</table>";
+			
+			echo "<hr/>";
+			
+			$chatdata = $forum->get_ic_chat_messages();
+			echo "<h4>20 seneste IC-chatbox-beskeder:</h4>";
+			echo "<table>";
+			while($chatmsg = $chatdata->fetch_assoc())
+			{
+				echo "<tr><td style='border:1px solid #c5c5c5; padding: 5px;'>";
+				echo $chatmsg['message'];
+				echo "</td>";
+				echo "<form method='post'>";
+				echo "<input type='hidden' name='msgid' value='".$chatmsg['icchat_ID']."'/>";
+				echo "<td style='border:1px solid #c5c5c5; padding: 5px;'><input type='submit' name='delete_icchatmsg' value='Slet chatbesked' "; ?>
+						onclick='return confirm("Er du sikker på, at du vil fjerne denne besked?")'
+						<?php echo "/></td>";
+				echo "</form>";
+				echo "</tr>";
+			}
+			echo "</table>";
+			
+			echo "</div></div>";
+			
+		}
 
 	echo "</div>"; //acp-wrap
 

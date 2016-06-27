@@ -1,10 +1,10 @@
-@media all and (min-device-width: 970px) {
+@media screen and (min-width: 970px) {
 
 /* CSS Document */
 body
   
 {
-	background-image: url('http://krystallandet.dk/kl_pictures/2016_dragonbg.png');
+	background-image: url('http://krystallandet.dk/kl_pictures/2016_dragonbg2.png');
 	background-size:cover;
 	background-size: 100%;
 	background-repeat: no-repeat; 
@@ -150,6 +150,13 @@ textarea
 {
 	color: #f4f4f4
 	
+}
+
+.scrollbutton
+{
+	float: left;
+	margin-top: 3px;
+	margin-left: 17px;	
 }
 
 #usermenu
@@ -411,6 +418,23 @@ textarea
 	/*color: #9c7651;*/	
 }
 
+.topforumpagenavigaton
+{
+	width: 100%;
+	text-align: left;	
+	margin-bottom: 5px;
+	margin-top: 15px;
+}
+
+.forumpagenavigaton
+{
+	width: 100%;
+	text-align: left;	
+	margin-bottom: 25px;
+	margin-top: 15px;
+}
+
+
 .pagenavigaton
 {
 	width: 100%;
@@ -531,7 +555,7 @@ textarea
 
 #characterlist .character_active
 {
-	width: 250px;
+	width: 260px;
 	height: 50px;
 	background-color: #dde2e6;
 	border: 1px solid #999;	
@@ -578,12 +602,14 @@ textarea
 	height: 50px;
 	opacity: 0.6;
     filter: alpha(opacity=60); 
+	background-repeat: no-repeat;
+	background-size: cover;
 }
 
 
 #characterlist .character_inactive
 {
-	width: 250px;
+	width: 260px;
 	height: 50px;
 	background-color: #e1e1e1;
 	border: 1px solid #999;	
@@ -618,14 +644,25 @@ textarea
 #characterlist .character_inactive .charimg
 {	
 	width: 50px;
-	height: 50px;	
-	border-radius: 50%;
-	float: left;
+	min-height: 50px;
 	opacity: 0.6;
     filter: alpha(opacity=60); /* For IE8 and earlier */
-	-webkit-filter: grayscale(100%); /* Chrome, Safari, Opera */
-    filter: grayscale(100%);
 }
+
+#characterlist .character_inactive .charimgoverlay
+{	
+	border-radius: 50%;
+	float: left;
+	width: 50px;
+	height: 50px;
+	opacity: 0.6;
+    filter: alpha(opacity=60); 
+	-webkit-filter: grayscale(70%); /* Chrome, Safari, Opera */
+    filter: grayscale(70%);
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
 
 #profiletext
 {
@@ -719,10 +756,50 @@ textarea
 {
 	width: 70%;  
 	font-size: 14px;
-	font-size: 14px;
 	color: #2e3237;
-	font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
+	line-height: 1.4em;
+    font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
+    font-weight: 500;
+	color: #2e3237;
 }
+
+.smallpostcontent img
+{
+	max-width: 100%;
+}
+
+.smallpostcontent pre {
+  background: #eeeeee;
+  border: 1px solid #c5c5c5;
+  margin-left: 10px;
+  padding: 10px;
+  quotes: "\201C""\201D""\2018""\2019";
+  	white-space: pre-wrap;       /* Since CSS 2.1 */
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+.smallpostcontent pre:before {
+  color: #2e3237;
+  content: open-quote;
+  font-size: 3em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+
+.smallpostcontent pre p {
+  display: inline;
+}
+
+.smallpostcontent .code {
+  background: #eeeeee;
+  border: 1px solid #c5c5c5;
+  padding: 10px;
+}
+
 .smallposttitle
 {
 	display: block;	
@@ -1012,7 +1089,6 @@ textarea
 .sidebox table
 {
 	width: 100%;
-	max-width: 250px;
 }
 
 .sidebox td
@@ -1020,6 +1096,65 @@ textarea
 	text-align: center;	
 	word-wrap: break-word;
 	max-width: 210px;
+}
+
+#sidebar .dropbtn 
+{
+	width: 100%;
+	background-color: #3b4c62;
+	min-height: 30px;	
+	text-align: center;	
+	padding-top: 10px;	
+	cursor:pointer;
+}
+
+#sidebar .dropbtn  h3
+{
+	margin: 0;
+	font-family: 'Raleway', sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 5px;
+	text-decoration: none;
+	color: #dbdbdb;
+	font-size: 18px;
+	font-stretch: condensed;
+}
+
+#sidebar #submenu 
+{
+  display: block;
+  color: #43556c;
+  border: 1px solid #c5c5c5;
+  background-color: #e6e6e6;
+  width: 213px;
+  padding: 5px;
+  text-align: left;
+  max-height: 350px;
+  overflow-y: scroll;
+  z-index: 100;
+  font-size: 11px;
+}
+
+#sidebar #submenu a 
+{
+  display: block;
+  margin-bottom: 3px;
+}
+
+#sidebar #submenu a:hover
+{
+	color: #9c7651;
+}
+
+#sidebar input[type='text']
+{
+	height: 20px;
+}
+
+#sidebar input[type='submit']
+{
+	height: 25px;
+	margin-top: 5px;
 }
 
 /* Viewforum */
@@ -1071,8 +1206,6 @@ textarea
 	font-size: 11px;
 	color: #343a41;	
 	background-color: #e6e6e6;	
-	word-wrap: break-word;
-	max-width: 470px;
 }
 
 
@@ -1099,7 +1232,6 @@ textarea
 .topicwarning
 {
 	display: block;
-	font-style: italic;
 	font-size: 11px;	
 }
 
@@ -1201,7 +1333,10 @@ textarea
 	max-width: 700px;  
 	font-size: 14px;
 	color: #2e3237;
-	font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
+	line-height: 1.4em;
+    font-family: "Lucida Grande", "Trebuchet MS", Verdana, Helvetica, Arial, sans-serif;
+    font-weight: 500;
+	margin-bottom: 5px;
 }
 
 .postcontent iframe
@@ -1217,6 +1352,11 @@ textarea
   margin-left: 10px;
   padding: 10px;
   quotes: "\201C""\201D""\2018""\2019";
+  	white-space: pre-wrap;       /* Since CSS 2.1 */
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
 
 .postcontent pre:before {
@@ -1238,9 +1378,15 @@ textarea
   padding: 10px;
 }
 
+
 .postcontent ul
 {
 	margin: 0;	
+}
+
+.postcontent img
+{
+	max-width: 100%;	
 }
 
 .posttitle
@@ -1702,6 +1848,14 @@ textarea
 	text-align: center;
 }
 
+#acp_page input.numberinput_small
+{
+	width: 100%;
+	max-width: 80px;
+	height: 25px;
+	text-align: center;
+}
+
 #acp_content 
 {
 	padding: 5px;
@@ -1809,6 +1963,11 @@ textarea
 	height: 30px;
 	font-size: 14px;
 	color: #3d4652;
+}
+
+#msgbox td:last-child
+{
+	min-width: 30px;
 }
 
 #msgbox td a
@@ -1987,6 +2146,7 @@ textarea
 
 .grouplist th
 {
+
 	
 	font-size: 13px;
 	color: #674c31;	

@@ -135,8 +135,8 @@ echo "<div class='charnavigation'>";
 		tableData: null,
 		dataUrl: null,
 		
-		itemsPerPage: 10,
-		ipp_list: [10,20,50],
+		itemsPerPage: 35,
+		ipp_list: [35,70,150],
 		
 		colSettings: [],
 		

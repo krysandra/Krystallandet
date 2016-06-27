@@ -9,6 +9,7 @@ $forum = new dbFunctions();
 <head>
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>Chat</title>
     
@@ -54,9 +55,9 @@ $forum = new dbFunctions();
             <input type='hidden' id='chatcolor' value='<?php echo $user_logged_in['color']; ?>'/>
             <input type='hidden' id='userid' value='<?php echo $user_logged_in_ID; ?>'/>
         	<td class='chatlabel'>Navn:</td>
-        	<td><input type='text' id='chatname' maxlength='10' value='<?php echo $user_logged_in['name']; ?>' disabled/></td>
+        	<td><input type='text' id='chatname' maxlength='20' value='<?php echo $user_logged_in['name']; ?>' disabled/></td>
             <td class='chatlabel'>Titel:</td>
-        	<td><input type='text' id='chattitle' maxlength='10' value='<?php echo $user_logged_in['chattitle']; ?>'/> </td></tr>
+        	<td><input type='text' id='chattitle' maxlength='15' value='<?php echo $user_logged_in['chattitle']; ?>'/> </td></tr>
             <tr><td class='chatlabel'>Billede:</td>
             <td><input type='text' id='chatimg' value='<?php if($user_logged_in['chatavatar'] != "") {echo $user_logged_in['chatavatar']; }
 			else { echo $user_logged_in['avatar'];} ?>'/></td>
@@ -65,7 +66,7 @@ $forum = new dbFunctions();
 			else {echo '../memberprofile.php?id='.$user_logged_in_ID; } ?>'/> </td></tr>
             <tr><td colspan='4'><textarea id="sendie" maxlength = '500' ></textarea></td></tr>
             </table>
-            <div class='linkspan' style="cursor:default;"><span onclick="popup('smilies.php');" style="cursor:pointer;">[smilies]</span></div>
+            <div class='linkspan'><span onclick="popup('smilies.php');" style="cursor:pointer;">[smilies]</span></div>
         </form>
             
          <?php
@@ -76,21 +77,24 @@ $forum = new dbFunctions();
         	<table id='send-area'> <tr>
             <input type='hidden' id='chatcolor' maxlength='10' value=''/>
             <input type='hidden' id='userid' value='0'/>
-        	<td>Navn:</td>
-        	<td><input type='text' id='chatname' maxlength='10' value='Gæst'/></td>
-            <td>Titel:</td>
-        	<td><input type='text' id='chattitle' maxlength='10' value=''/> </td></tr>
-            <tr><td>Billede:</td>
+        	<td class='chatlabel'>Navn:</td>
+        	<td><input type='text' id='chatname' maxlength='20' value='Gæst'/></td>
+            <td class='chatlabel'>Titel:</td>
+        	<td><input type='text' id='chattitle' maxlength='15' value=''/> </td></tr>
+            <tr><td class='chatlabel'>Billede:</td>
             <td><input type='text' id='chatimg' value=''/></td>
-            <td>Link:</td>
+            <td class='chatlabel'>Link:</td>
             <td><input type='text' id='chatlink' value=''/> </td></tr>
             <tr><td colspan='4'><textarea id="sendie" maxlength = '500' ></textarea></td></tr>
             </table>
-            <div class='linkspan' onclick="popup('smilies.php');">[smilies]</div>
+            <div class='linkspan'><span onclick="popup('smilies.php');" style="cursor:pointer;">[smilies]</span></div>
         </form>
 		
         <?php
 		}
+		
+		echo "<a href='https://www.facebook.com/groups/krystallandet/' target='blank'><img class='fblogo' src='../images/fb.png' title='Besøg vores facebookgruppe'/></a>";
+		
 		?>
         
          <script type="text/javascript">
@@ -119,7 +123,7 @@ $forum = new dbFunctions();
     	}
     	
     	// strip tags
-    	name = name.replace(/(<([^>]+)>)/ig,"");   	
+    	//name = name.replace(/(<([^>]+)>)/ig,"");   	
     	
     	// kick off chat
         var chat =  new Chat();
@@ -147,7 +151,7 @@ $forum = new dbFunctions();
     		 // watch textarea for release of key press
     		 $('#sendie').keyup(function(e) {	
     		 					 
-    			  if (e.keyCode == 13) { 
+    			  if (e.keyCode == 13 && e.shiftKey == false) { 
     			  
                     var text = $(this).val();
     				var maxLength = $(this).attr("maxlength");  

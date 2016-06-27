@@ -85,7 +85,7 @@ if(isset($_POST['reset_password']))
 			<br/><br/>
 			
 			Du kan nulstille dit kodeord ved at klikke på linket:<br/>
-			<a href="http://www.krystallandet.dk/customsystem/login.php?userreset='.$guid.'">http://www.krystallandet.dk/customsystem/login.php?userreset='.$guid.'</a><br/>
+			<a href="http://www.krystallandet.dk/customsystem/login.php?userreset='.$guid.'">http://www.krystallandet.dk/beta/login.php?userreset='.$guid.'</a><br/>
 			Herefter kan du logge ind med brugernavnet "'.$user['name'].'" og din valgte adgangskode.
 			
 			<br/><br/>
@@ -96,7 +96,7 @@ if(isset($_POST['reset_password']))
 			Har du ikke bedt om dette, kan du blot ignorere denne email, og din adgangskode vil forblive den samme.
 			
 			Du kan nulstille dit kodeord ved at klikke på linket:<br/>
-			http://www.krystallandet.dk/customsystem/login.php?userreset='.$guid.'
+			http://www.krystallandet.dk/beta/login.php?userreset='.$guid.'
 			Herefter kan du logge ind med brugernavnet "'.$user['name'].'" og din valgte adgangskode.
 			
 			Mvh 

@@ -9,7 +9,7 @@ if(!isset($_SESSION['user']))
 }
 else
 {
-	echo "<div class='category'><a href=''>Brugerkontrolpanel</a></div>";
+	echo "<div class='category'><a href=''>Kontrolpanel</a></div>";
 	
 	
 	echo "<div id='topmenu'>";
@@ -417,7 +417,7 @@ else
 					echo "</optgroup>"; }		
 		$numberofchars = $forum->count_characters_from_superuser_to_profile_edit($user_logged_in_ID, 0, 1, 1)->fetch_assoc();
 		if($numberofchars['res'] > 0) { echo "<optgroup label='Døde'>";  
-			if($charcount == 0) { $firstchar = $forum->get_first_character_from_superuser_to_profile_edit($user_logged_in_ID, 1, 0, 1)->fetch_assoc(); $selectedchar = $firstchar['character_ID']; }
+			if($charcount == 0) { $firstchar = $forum->get_first_character_from_superuser_to_profile_edit($user_logged_in_ID, 0, 1, 1)->fetch_assoc(); $selectedchar = $firstchar['character_ID']; }
 				while($char = $deadchars->fetch_assoc()) { $charcount++; 
 					if($postedchar == $char['character_ID']) { echo "<option value='".$char['character_ID']."' selected>".$char['name']."</option>"; }
 					else { echo "<option value='".$char['character_ID']."' >".$char['name']."</option>"; } } 
@@ -449,6 +449,7 @@ else
 		echo "<a href='ucp.php?menu=char&mode=profile&characterselect=".$selectedchar."'>Profiltekst</a>";
 		echo "<a href='ucp.php?menu=char&mode=avatar&characterselect=".$selectedchar."'>Avatar</a>";
 		echo "<a href='ucp.php?menu=char&mode=sig&characterselect=".$selectedchar."'>Signatur</a>";
+		echo "<a href='ucp.php?menu=char&mode=settings&characterselect=".$selectedchar."'>Indstillinger</a>";
 		echo "</div>";
 		echo "</div>";
 		
@@ -475,6 +476,110 @@ else
 				echo "<p class='center'>Her kan du ændre i de karakterer, du har i rollespillet.<br/>
 				Ønsker du at oprette en ny karakter i stedet, så benyt den ovenstående menu.</p>";
 				echo "</div>";
+				
+			}
+			
+			if(($_GET['mode']) == "settings")
+			{
+				echo "<div class='category'><a href=''>Indstillinger</a></div>";
+				echo "<div id='ucp_content' class='center'>";
+				
+				if(isset($_GET['characterselect'])) { $selectedchar = $_GET['characterselect']; }
+				if($selectedchar == 0)
+	
+				{	
+					echo "Du kan ikke udføre denne handling, når du endnu ikke har tilknyttet nogen karakterer til din bruger.";		
+				}
+	
+				else
+				{	
+
+				$currentchar = $forum->get_character($selectedchar)->fetch_assoc();	
+				
+				if($_POST['submit_chardead'])
+				{
+					if($currentchar['accepted'] == 1) //A non-accepted character must never be dead
+					{
+						//A dead character must also be inactive
+						$updateactivestatus = $forum->update_character_active_status($currentchar['character_ID'], 0);
+						$updatedeadstatus = $forum->update_character_dead_status($currentchar['character_ID'], 1);
+						$setcolor = $forum->update_character_color($deadcolor, $currentchar['character_ID']);
+						header('Location:ucp.php?menu=char&mode=settings&characterselect='.$currentchar['character_ID']);
+					}
+				}
+				if($_POST['submit_charalive'])
+				{
+					$updateactivestatus = $forum->update_character_active_status($currentchar['character_ID'], 1);
+					$updatedeadstatus = $forum->update_character_dead_status($currentchar['character_ID'], 0);
+					
+					//If the char has a default group, we need to change its color to the group color.
+					$user_has_default_group = $forum->check_users_default_group($currentchar['character_ID'])->fetch_assoc();
+					if($user_has_default_group['res'] > 0)
+					{
+						$defaultgroup = $forum->get_users_default_group($currentchar['character_ID'])->fetch_assoc(); 
+						$defgroupdata = $forum->get_group($defaultgroup['fk_group_ID'])->fetch_assoc();
+						$setcolor = $forum->update_character_color($defgroupdata['color'], $currentchar['character_ID']);
+					}
+					//Otherwise, no color.
+					else
+					{
+						$setcolor = $forum->update_character_color("", $currentchar['character_ID']);
+					}
+					header('Location:ucp.php?menu=char&mode=settings&characterselect='.$currentchar['character_ID']);
+				}
+				if($_POST['submit_chardelete'])
+				{
+					$deletecharapprovalrequests = $forum->delete_approvalrequests_from_char($currentchar['character_ID']);
+					$deletechargroupmemberships = $forum->delete_groupmemberships_from_char($currentchar['character_ID']);
+					$deletetags = $forum->delete_tags_from_char($currentchar['character_ID']);
+					$deleteprofiledata = $forum->delete_profiledata_from_char($currentchar['character_ID']); 
+					$deleteachievements = $forum->delete_userachievements_from_character($currentchar['character_ID']);
+					$deletebounties = $forum->remove_bounty_from_character($currentchar['character_ID']);
+					$forum->delete_ic_chat_messages_from_char($currentchar['character_ID']);
+					//finally delete the char
+					$deletechar = $forum->delete_character($currentchar['character_ID']);
+					header('Location:ucp.php?menu=char');
+				}
+								
+				echo "<p>Din karakter er i øjeblikket angivet som ";
+				if($currentchar['dead'] == 1) { echo "<span class='italic bold'>død</span>."; }
+				else if($currentchar['accepted'] == 0) { echo "<span class='italic bold'>ikke godkendt</span>."; }
+				else if($currentchar['active'] == 1) { echo "<span class='italic bold'>aktiv</span>."; } 
+				else { echo "<span class='italic bold'>inaktiv</span>."; }
+				echo "</p>";
+
+				if($currentchar['dead'] == 0)
+				{
+					if($currentchar['accepted'] == 1)
+					{
+						echo "<form method='post'><input type='submit' value='Angiv som død' name='submit_chardead'"; ?>
+						onclick='return confirm("Er du sikker på, at du vil angive karakteren som værende død? Det vil ikke længere være muligt at skrive med den.")'
+						<?php echo "/>*</form>";
+						echo "<br/><br/>";
+						echo "<p class='smallertext'>* Hvis du angiver din karakter som død, kan du ikke længere skrive nye posts med den, 
+						og den vil ikke længere optræde på listen af karakterer på din personlige profil.</p>";	
+					}
+					else
+					{
+						echo "<p class='italic'>Du skal først have din karakter godkendt af en admin eller moderator</p>";	
+					}
+				}
+				else
+				{
+					echo "<form method='post'><input type='submit' value='Genopliv karakter' name='submit_charalive'/></form>";
+				}
+				
+				$characterposts = $forum->count_all_posts_from_character($currentchar['character_ID'])->fetch_assoc();
+				if($characterposts['res'] < 1)
+				{
+					echo "<form method='post'><input class='deletebutton' type='submit' value='Slet karakter' name='submit_chardelete'"; ?>
+						onclick='return confirm("Er du sikker på, at du vil slette karakteren? Dette kan ikke fortrydes.")'
+						<?php echo "/></form>";
+						echo "<br/>";
+				}
+				echo "</div>";
+				
+				}
 				
 			}
 				
@@ -922,7 +1027,7 @@ else
 						/* Character aligment */
 	
 						$alignments = 
-						array("Retsmæssig Ond", "Neutral Ond", "Kaotisk Ond", "Retsmæssig Neutral", "Rigtig Neutral", "Kaotisk Neutral", "Retsmæssig God", "Neutral God", "Kaotisk God");
+						array("Retmæssig Ond", "Neutral Ond", "Kaotisk Ond", "Retmæssig Neutral", "Sand Neutral", "Kaotisk Neutral", "Retmæssig God", "Neutral God", "Kaotisk God");
 	
 						echo "<tr><td class='tableleft'><span class='bold'>Tilhørsforhold:</span>
 						 <span class='tablesubtext'>Du kan læse nærmere om tilhørsforholdene under karakterinformation.</span></td>"; 
@@ -1432,6 +1537,8 @@ else
 							{
 								echo "<input type='submit' class='profilesubmit' name='submit_for_approval' value='Send til godkendelse'>";
 								echo "<input type='submit' class='profilesubmit' name='submit_changes' value='Gem ændringer'>";
+								echo "<br/><br/><a href='characterprofile.php?id=".$selectedchar."' target='blank'>Klik her for at se din karakters profil</a> 
+								<br/><span class='smalltext'>(Husk at gemme ændringer først)</span>";
 							}
 						}
 						else {
@@ -1442,11 +1549,11 @@ else
 							echo "<input type='submit' class='profilesubmit' name='submit_for_approval' value='Send til gengodkendelse'>";	
 							}
 						}
+						
 						echo "</td></tr></form>";
 						
 	
 						echo "</table>"; echo "<hr/>";
-	
 						
 						
 						//Preventing writing data to the small number inputs
@@ -1609,7 +1716,7 @@ else
 						/* Character aligment */
 	
 						$alignments = 
-						array("Retsmæssig Ond", "Neutral Ond", "Kaotisk Ond", "Retsmæssig Neutral", "Rigtig Neutral", "Kaotisk Neutral", "Retsmæssig God", "Neutral God", "Kaotisk God");
+						array("Retmæssig Ond", "Neutral Ond", "Kaotisk Ond", "Retmæssig Neutral", "Sand Neutral", "Kaotisk Neutral", "Retmæssig God", "Neutral God", "Kaotisk God");
 	
 						echo "<tr><td class='tableleft'><span class='bold'>Tilhørsforhold:</span>
 						 <span class='tablesubtext'>Du kan læse nærmere om tilhørsforholdene under karakterinformation.</span></td>"; 
@@ -2167,6 +2274,8 @@ else
 						else 
 						{
 							echo "<input type='submit' class='profilesubmit' name='submit_changes' value='Gem ændringer'>";
+							echo "<br/><br/><a href='characterprofile.php?id=".$selectedchar."' target='blank'>Klik her for at se din karakters profil</a> 
+								<br/><span class='smalltext'>(Husk at gemme ændringer først)</span>";
 						}
 						echo "</td></tr></form>";
 						

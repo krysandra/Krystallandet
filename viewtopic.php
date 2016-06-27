@@ -281,7 +281,7 @@ if(isset($_GET['t']))
 					}
 					
 					$superuser = $forum->get_superuser($user['fk_superuser_ID'])->fetch_assoc();
-					echo "Skaber: <a class='username' href='memberprofile.php?id=".$superuser['superuser_ID']."'>".$superuser['name']."</a><br/><br/>";	
+					echo "Skaber: <a class='username' href='memberprofile.php?id=".$superuser['superuser_ID']."' style='color:".$superuser['color'].";'>".$superuser['name']."</a><br/><br/>";	
 				}
 			}
 			else
@@ -292,7 +292,8 @@ if(isset($_GET['t']))
 				}
 				else
 				{				
-					$user = $forum->get_superuser($p['fk_superuser_ID'])->fetch_assoc();			
+					$user = $forum->get_superuser($p['fk_superuser_ID'])->fetch_assoc();
+					$superuser = $user;			
 					if ($user['avatar'] != "")
 					{
 						echo "<img src='".$user['avatar']."' />";	
@@ -358,7 +359,7 @@ if(isset($_GET['t']))
 			$lastpost = $forum->get_last_post($topic_id)->fetch_assoc();
 			echo "<div class='postbuttons'>";
 			//Edit post if own or if mod/admin			
-			if($user_rank > 1 || $forummod['res'] > 0 || $superuser['superuser_ID'] == $user_logged_in_ID)
+			if($user_rank > 1 || $forummod['res'] > 0 || $superuser['superuser_ID'] == $user_logged_in_ID )
 			{
 				echo "<a href='posting.php?edit=".$p['post_ID']."&page=".$currentpage."'><img src='images/topic_edit.png' title='Redigér post'/></a> ";
 			}
@@ -377,12 +378,14 @@ if(isset($_GET['t']))
 			echo "</div>"; //posttop
 			
 			$parser->parse($p['text']);
-			echo nl2br($parser->getAsHtml());
+			$posttext = nl2br($parser->getAsHtml());
+			echo parseURls($posttext);
 			if($user['signature'] != "" && ($p['fk_character_ID'] !=0 || $p['fk_superuser_ID'] != 0))
 			{
 				echo "<div class='postsignature'>";
 				$parser->parse($user['signature']);
-				echo nl2br($parser->getAsHtml());
+				$sigtext = nl2br($parser->getAsHtml());
+				echo parseURls($sigtext);
 				echo "</div>"; //signature	
 			}
 			echo "</div>"; //postcontent
@@ -391,7 +394,7 @@ if(isset($_GET['t']))
 		}
 		
 		
-		if ($user_rank >= $viewforum['write_access'])	
+		if ($user_rank >= $viewforum['write_access'] && ( $accepted_chars > 0 || $viewforum['ingame'] == 0))	
 		{
 			echo "<hr/>";
 			
@@ -597,9 +600,9 @@ if(isset($_GET['t']))
 					if ($viewforum['ingame'] == 1 && $user_rank > 0)
 					{
 						echo "<tr><td><span class='bold'>Angiv hvem der næste gang, skal svare i tråden:</span><br/><br/>";	
-		
 							if (count($topicposters) > 0)
 							{
+								asort($topicpostertime);
 								echo "<input type='radio' name='nextposter' value='dropdown' required> Nuværende tråddeltager ";	
 								echo "<select name='nextposter_chosen'>";
 								foreach ($topicpostertime as $tpid => $time)

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="changelog.txt" server="ftp.krystallandet.dk" local="131083079458262234" remote="131028805800000000" Dst="2" />
-<file name="LICENSE.TXT" server="ftp.krystallandet.dk" local="131083079456162114" remote="131028806400000000" Dst="2" />
+<file name="changelog.txt" server="ftp.krystallandet.dk" local="131083079458262234" remote="131094471000000000" Dst="2" />
+<file name="LICENSE.TXT" server="ftp.krystallandet.dk" local="131083079456162114" remote="131083012800000000" Dst="2" />
+<file name="jquery.tinymce.min.js" server="ftp.krystallandet.dk" local="131014294020000000" remote="131094471000000000" Dst="2" />
+<file name="license.txt" server="ftp.krystallandet.dk" local="131083079456162114" remote="131094471000000000" Dst="2" />
+<file name="tinymce.min.js" server="ftp.krystallandet.dk" local="131014294020000000" remote="131094471600000000" Dst="2" />
 </dwsync>

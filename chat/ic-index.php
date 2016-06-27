@@ -9,6 +9,7 @@ $forum = new dbFunctions();
 <head>
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>IC-Chat</title>
     
@@ -123,7 +124,7 @@ $forum = new dbFunctions();
     		 // watch textarea for release of key press
     		 $('#icsendie').keyup(function(e) {	
     		 					 
-    			  if (e.keyCode == 13) { 
+    			  if (e.keyCode == 13 && e.shiftKey == false) { 
     			  
                     var text = $(this).val();
     				var maxLength = $(this).attr("maxlength");  

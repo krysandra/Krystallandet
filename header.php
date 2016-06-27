@@ -35,6 +35,7 @@ include('config.php');
     
 
     <div id="usermenu">
+    <img class='scrollbutton' src='images/down.png' id='topofpage' onclick='window.scrollTo(0,document.body.scrollHeight);' style='cursor:pointer;' title='Til bunden'/>
 
 
 

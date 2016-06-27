@@ -2,33 +2,56 @@
 echo "<div id='forumlist'>";
 if(empty($_GET))
 {
-	$toplevelforums = $forum->count_toplevel_forums()->fetch_assoc();
-	$max = $toplevelforums['res'];
-	$next = 0;
+	$toplevelforums = $forum->get_toplevel_forums();
+	$categorylist = array();
+	
+	while($toplevelforum = $toplevelforums->fetch_assoc())
+	{
+		$categorylist[$toplevelforum['above_ID']] = $toplevelforum;	
+	}
+	
+	$max = count($categorylist);
 	$allforumposts = array();
 	$forumpostcount = $forum->count_all_forum_posts();
 	while($forumposts = $forumpostcount->fetch_assoc()){ $allforumposts[$forumposts['fk_forum_ID']] = $forumposts['numberOfPosts']; }
 	$allforumtopics = array();
 	$forumtopiccount = $forum->count_all_forum_topics();
 	while($forumtopics = $forumtopiccount->fetch_assoc()){ $allforumtopics[$forumtopics['fk_forum_ID']] = $forumtopics['numberOfTopics']; }
+	$next = 0;
+	
+	$time = microtime(true);
+	$time = explode(' ', $time);
+	$time = $time[1] + $time[0];
+	$finish = $time;
+	$foruminfo_time = round(($finish - $start), 4);
+	
 	for($i = 0; $i < $max; $i++)
 	{
-		$currentforum = $forum->get_toplevel_forum($next)->fetch_assoc();
+		$currentforum = $categorylist[$next];
 		if ($user_rank == 3 && $currentforum['read_access'] >= 1 || $user_rank == 2 && $currentforum['read_access'] <= 2 
 			|| $user_rank == 1 && $currentforum['read_access'] <= 1 || $currentforum['read_access'] == 0 )
 		{
 			if($currentforum['category'] == 1)
 			{
 				echo "<div class='category'><a href='viewforum.php?f=".$currentforum['forum_ID']."'>".$currentforum['title']."</a></div>";	
-				$subforums = $forum->count_subforums($currentforum['forum_ID'])->fetch_assoc();
-				$submax = $subforums['res'];
+				
+				$subforums = $forum->get_all_subforums($currentforum['forum_ID']);
+				$subforumlist = array();
+				
+				while($subforum = $subforums->fetch_assoc())
+				{
+					$subforumlist[$subforum['above_ID']] = $subforum;	
+				}
+				
+				$submax = count($subforumlist);
 				$subnext = 0;
+				
 				echo "<div class='subforumcontainer'>";
 				for($j = 0; $j < $submax; $j++)
 				{
-					$currentsubforum = $forum->get_subforum($subnext, $currentforum['forum_ID'])->fetch_assoc();
+					$currentsubforum = $subforumlist[$subnext];
 					
-					if ($user_rank == 3 && $currentsubforum['read_access'] >= 1 || $user_rank == 2 && $currentsubforumm['read_access'] <= 2 
+					if ($user_rank == 3 && $currentsubforum['read_access'] >= 1 || $user_rank == 2 && $currentsubforum['read_access'] <= 2 
 					|| $user_rank == 1 && $currentsubforum['read_access'] <= 1 || $currentsubforum['read_access'] == 0 )
 					{						
 						//$numberofposts = count_subforum_posts($currentsubforum['forum_ID']); //$forum->count_forum_posts($currentsubforum['forum_ID'])->fetch_assoc();
@@ -80,6 +103,14 @@ if(empty($_GET))
 			
 		$next = $currentforum['forum_ID'];		
 	}
+
+	
+	$time = microtime(true);
+	$time = explode(' ', $time);
+	$time = $time[1] + $time[0];
+	$finish = $time;
+	$forumcreation_time = round(($finish - $start), 4);
+	
 }
 echo "</div>";
 ?>

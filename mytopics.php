@@ -98,7 +98,8 @@ if($user_rank > 0)
 				}
 
 				echo " &raquo; ".date("j. M Y G:i", strtotime($t['datetime']));
-				if($t['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$t['warning']."</span>"; }
+				if($t['topictype'] != "" ) { echo "<span class='topicwarning'>".$t['topictype']; if($t['warning'] != "" ) { echo " <span class='italic'>(Advarsel: ".$t['warning'].")</span>"; } echo "</span>"; }
+				else if($t['warning'] != "" ) { echo "<span class='topicwarning'><span class='italic'>Advarsel: ".$t['warning']."</span></span>"; } 
 
 				echo "</td>";
 				
@@ -186,10 +187,10 @@ if($user_rank > 0)
 			if ($currentpage > 1) 
 			{
 				$prevpage = $currentpage - 1;
-		 		echo " <a class='navlink' href='mytopics.php?all&currentpage=$prevpage'>«</a> ";	
+		 		echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$prevpage'>«</a> ";	
 				if ($currentpage - $range > 1) 
 				{
-					echo " <a class='navlink' href='mytopics.php?all&currentpage=1'>1</a> ";
+					echo " <a class='navlink' href='mytopics.php?offgame&currentpage=1'>1</a> ";
 				}		
 			}
 			
@@ -203,15 +204,15 @@ if($user_rank > 0)
 						 if($totalpages > 1) { echo " <span class='navlink_active'><b>$x</b></span>"; }
 
 			  		} 
-					else { echo " <a class='navlink' href='mytopics.php?all&currentpage=$x'>$x</a> "; } 
+					else { echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$x'>$x</a> "; } 
 		   		} 
 			} 
 			
 			if ($currentpage != $totalpages) 
 			{	
 				$nextpage = $currentpage + 1;	
-				if ($totalpages - $range > $currentpage) {	echo " <a class='navlink' href='mytopics.php?all&currentpage=$totalpages'>".$totalpages."</a> ";	}
-				if ($totalpages > 1) { echo " <a class='navlink' href='mytopics.php?all&currentpage=$nextpage'>»</a> "; }
+				if ($totalpages - $range > $currentpage) {	echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$totalpages'>".$totalpages."</a> ";	}
+				if ($totalpages > 1) { echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$nextpage'>»</a> "; }
 			} 
 			
 			echo "</div>";				
@@ -262,7 +263,8 @@ if($user_rank > 0)
 				}	
 
 				echo " &raquo; ".date("j. M Y G:i", strtotime($t['datetime']));
-				if($t['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$t['warning']."</span>"; }
+				if($t['topictype'] != "" ) { echo "<span class='topicwarning'>".$t['topictype']; if($t['warning'] != "" ) { echo " <span class='italic'>(Advarsel: ".$t['warning'].")</span>"; } echo "</span>"; }
+				else if($t['warning'] != "" ) { echo "<span class='topicwarning'><span class='italic'>Advarsel: ".$t['warning']."</span></span>"; } 
 
 				echo "</td>";
 				
@@ -309,10 +311,10 @@ if($user_rank > 0)
 			if ($currentpage > 1) 
 			{
 				$prevpage = $currentpage - 1;
-		 		echo " <a class='navlink' href='mytopics.php?all&currentpage=$prevpage'>«</a> ";	
+		 		echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$prevpage'>«</a> ";	
 				if ($currentpage - $range > 1) 
 				{
-					echo " <a class='navlink' href='mytopics.php?all&currentpage=1'>1</a> ";
+					echo " <a class='navlink' href='mytopics.php?offgame&currentpage=1'>1</a> ";
 				}		
 			}
 			
@@ -326,15 +328,16 @@ if($user_rank > 0)
 						 if($totalpages > 1) { echo " <span class='navlink_active'><b>$x</b></span>"; }
 
 			  		} 
-					else { echo " <a class='navlink' href='mytopics.php?all&currentpage=$x'>$x</a> "; } 
+					else { echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$x'>$x</a> "; } 
 		   		} 
 			} 
 			
 			if ($currentpage != $totalpages) 
 			{	
 				$nextpage = $currentpage + 1;	
-				if ($totalpages - $range > $currentpage) {	echo " <a class='navlink' href='mytopics.php?all&currentpage=$totalpages'>".$totalpages."</a> ";	}
-				if ($totalpages > 1) { echo " <a class='navlink' href='mytopics.php?all&currentpage=$nextpage'>»</a> "; }
+				if ($totalpages - $range > $currentpage) {	echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$totalpages'>".$totalpages."</a> ";	}
+
+				if ($totalpages > 1) { echo " <a class='navlink' href='mytopics.php?offgame&currentpage=$nextpage'>»</a> "; }
 			} 
 			
 			echo "</div>";				
@@ -374,7 +377,8 @@ if($user_rank > 0)
 				}
 
 				echo " &raquo; ".date("j. M Y G:i", strtotime($current_topic['datetime']));
-				if($current_topic['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$current_topic['warning']."</span>"; }
+				if($t['topictype'] != "" ) { echo "<span class='topicwarning'>".$t['topictype']; if($t['warning'] != "" ) { echo " <span class='italic'>(Advarsel: ".$t['warning'].")</span>"; } echo "</span>"; }
+				else if($t['warning'] != "" ) { echo "<span class='topicwarning'><span class='italic'>Advarsel: ".$t['warning']."</span></span>"; } 
 
 				echo "</td>";
 				

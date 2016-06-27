@@ -33,7 +33,25 @@ class dbFunctions
 	
 	public function get_all_superusers() 
 	{
-		$query = $this->conn->prepare("SELECT superuser_ID, name, color, date_joined, last_active FROM ".$this->prefix."_superusers ORDER BY name");
+		$query = $this->conn->prepare("SELECT u.superuser_ID, u.name, u.color, u.date_joined, u.last_active, p.overall_posts, p.ingame_posts, a.achievementnumber, c.allchars, c.activechars
+		FROM ".$this->prefix."_superusers u
+		
+		LEFT JOIN (SELECT fk_superuser_id, COUNT(post_ID) AS overall_posts, 
+		SUM(CASE WHEN ingame = 1 AND official = 1 THEN 1 ELSE 0 END) AS ingame_posts
+		FROM ".$this->prefix."_posts GROUP BY fk_superuser_ID) p
+		ON p.fk_superuser_ID = u.superuser_ID
+		
+		LEFT JOIN (SELECT fk_superuser_id, COUNT(DISTINCT fk_achievement_ID) AS achievementnumber
+		FROM ".$this->prefix."_userachievements GROUP BY fk_superuser_ID) a
+		ON a.fk_superuser_ID = u.superuser_ID
+		
+		LEFT JOIN (SELECT fk_superuser_id, COUNT(character_ID) AS allchars, 
+		SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) AS activechars
+		FROM ".$this->prefix."_usercharacters
+		WHERE accepted = 1 GROUP BY fk_superuser_ID) c
+		ON c.fk_superuser_ID = u.superuser_ID
+		
+		ORDER BY u.name");
 		$query->execute();			
 		/* Store the result (to get properties) */
 		//$query ->store_result();		
@@ -112,6 +130,9 @@ class dbFunctions
 		$query->bind_param('s', $datetime_after);
 		$query->execute();		
 		return $query->get_result();
+
+
+
 	}	
 	
 	public function count_online_users() 
@@ -403,14 +424,14 @@ class dbFunctions
 	
 	public function count_character_search_all_specialchars() 
 	{
-		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND dead = 0 AND name regexp '[^a-zA-Z0-9]'");
+		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND dead = 0 AND name REGEXP '^[^a-z]'");
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();	
 	}
 	public function count_character_search_specialchars($active) 
 	{
-		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND active = ? AND dead = 0 AND name regexp '[^a-zA-Z0-9]'");
+		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND active = ? AND dead = 0 AND name REGEXP '^[^a-z]'");
 		$query->bind_param('i', $active);
 		$query->execute();		
 		/* Get the result */
@@ -418,7 +439,7 @@ class dbFunctions
 	}
 	public function count_character_search_all_specialchars_include_dead() 
 	{
-		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND name regexp '[^a-zA-Z0-9]'");
+		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND name REGEXP '^[^a-z]'");
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();	
@@ -448,9 +469,24 @@ class dbFunctions
 	
 	public function get_character_search_all_include_dead($like) 
 	{
-		$this->conn->real_escape_string($like);
 		$like = $like."%";
-		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, date_created, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND name LIKE ? ORDER BY name");
+		$query = $this->conn->prepare("SELECT c.character_ID, c.name, c.accepted, c.active, c.dead, c.color, c.date_created, c.fk_superuser_ID,
+		p.fk_race_ID, p.age, p.alignment, u.name AS superusername, u.color AS superusercolor, po.characterposts
+		FROM ".$this->prefix."_usercharacters c
+		
+		INNER JOIN ".$this->prefix."_profiledata p
+		ON c.character_ID = p.fk_character_ID
+		
+		INNER JOIN ".$this->prefix."_superusers u
+		ON u.superuser_ID = c.fk_superuser_ID
+		
+		LEFT JOIN (SELECT fk_character_ID, COUNT(post_ID) AS characterposts
+		FROM ".$this->prefix."_posts 
+		WHERE ingame = 1 AND official = 1
+		GROUP BY fk_character_ID) po
+		ON po.fk_character_ID = c.character_ID
+		
+		WHERE c.accepted = 1 AND c.name LIKE ? ORDER BY c.name");
 		$query->bind_param('s', $like);
 		$query->execute();		
 		/* Get the result */
@@ -459,7 +495,7 @@ class dbFunctions
 	
 	public function get_character_search_all_specialchars($offset, $limit) 
 	{
-		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, date_created, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND dead = 0 AND name regexp '[^a-zA-Z0-9]' ORDER BY name LIMIT ? , ?");
+		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, date_created, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND dead = 0 AND name REGEXP '^[^a-z]' ORDER BY name LIMIT ? , ?");
 		$query->bind_param('ii', $offset, $limit);
 		$query->execute();		
 		/* Get the result */
@@ -468,7 +504,7 @@ class dbFunctions
 	
 	public function get_character_search_specialchars($active, $offset, $limit) 
 	{
-		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, date_created, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND active = ? AND dead = 0 AND name regexp '[^a-zA-Z0-9]' ORDER BY name LIMIT ? , ?");
+		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, date_created, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND active = ? AND dead = 0 AND name REGEXP '^[^a-z]' ORDER BY name LIMIT ? , ?");
 		$query->bind_param('iii', $active, $offset, $limit);
 		$query->execute();		
 		/* Get the result */
@@ -477,7 +513,23 @@ class dbFunctions
 	
 	public function get_character_search_all_specialchars_include_dead() 
 	{
-		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, date_created, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND name regexp '[^a-zA-Z]' ORDER BY name");
+		$query = $this->conn->prepare("SELECT c.character_ID, c.name, c.accepted, c.active, c.dead, c.color, c.date_created, c.fk_superuser_ID,
+		p.fk_race_ID, p.age, p.alignment, u.name AS superusername, u.color AS superusercolor
+		FROM ".$this->prefix."_usercharacters c
+		
+		INNER JOIN ".$this->prefix."_profiledata p
+		ON c.character_ID = p.fk_character_ID
+		
+		INNER JOIN ".$this->prefix."_superusers u
+		ON u.superuser_ID = c.fk_superuser_ID
+		
+		LEFT JOIN (SELECT fk_character_ID, COUNT(post_ID) AS characterposts
+		FROM ".$this->prefix."_posts 
+		WHERE ingame = 1 AND official = 1
+		GROUP BY fk_character_ID) po
+		ON po.fk_character_ID = c.character_ID
+		
+		WHERE c.accepted = 1 AND c.name REGEXP '^[^a-z]' ORDER BY c.name");
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();	
@@ -503,7 +555,7 @@ class dbFunctions
 	
 	public function count_accepted_characters_from_superuser($id)
 	{
-		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND fk_superuser_ID = ?");
+		$query = $this->conn->prepare("SELECT COUNT(character_ID) AS res FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND dead = 0 AND fk_superuser_ID = ?");
 		$query->bind_param('i', $id);
 		$query->execute();	
 		/* Get the result */
@@ -602,6 +654,7 @@ class dbFunctions
 	public function get_most_active_topic_from_user($id)
 	{
 		$query = $this->conn->prepare("SELECT t.title, t.topic_ID, COUNT(p.post_ID) AS NumberOfPosts FROM ".$this->prefix."_posts p
+
 		INNER JOIN ".$this->prefix."_topics t
 		ON p.fk_topic_ID=t.topic_ID
 		WHERE p.fk_superuser_ID = ? 
@@ -674,6 +727,7 @@ class dbFunctions
 		ON p.fk_superuser_ID=s.superuser_ID
 		WHERE p.ingame = 1 AND p.official = 1
 		GROUP BY s.superuser_ID
+		HAVING NumberOfPosts >= 1000
 		ORDER BY NumberOfPosts DESC
 		LIMIT 5"
 		);
@@ -690,6 +744,7 @@ class dbFunctions
 		WHERE p.ingame = 1 AND p.official = 1
 		AND MONTH(datetime) = ? AND YEAR(datetime) = ?
 		GROUP BY s.superuser_ID
+		HAVING NumberOfPosts >= 1
 		ORDER BY NumberOfPosts DESC
 		LIMIT 5"
 		);
@@ -992,6 +1047,14 @@ class dbFunctions
 		return 1;
 	}
 	
+	public function delete_superuser($id) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_superusers WHERE superuser_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();	
+		return 1;
+	}
+	
 	public function get_user_postrank($posts)
 	{
 		$query = $this->conn->prepare("SELECT title FROM ".$this->prefix."_postranks WHERE postlimit <= ? ORDER BY postlimit DESC LIMIT 1");
@@ -1044,6 +1107,16 @@ class dbFunctions
 		/* Get the result */
 		return $query->get_result();	
 	}
+	
+	public function get_toplevel_forums() 
+	{
+		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_forums WHERE parent_ID = 0");
+		$query->bind_param('i', $next);
+		$query->execute();	
+		/* Get the result */
+		return $query->get_result();				
+	}	
+	
 	public function get_toplevel_forum($next) 
 	{
 		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_forums WHERE parent_ID = 0 AND above_ID = ?");
@@ -1213,6 +1286,7 @@ class dbFunctions
 	}
 	
 	public function count_forummods($forumid) 
+
 	{
 		$query = $this->conn->prepare("SELECT COUNT(fk_superuser_ID) AS res FROM ".$this->prefix."_forummods WHERE fk_forum_ID = ?");
 		$query->bind_param('i', $forumid);
@@ -1248,7 +1322,45 @@ class dbFunctions
 		return 1;
 	}	
 	
+	public function delete_forummod_statuses_from_user($userid) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_forummods WHERE fk_superuser_ID = ?");
+		$query->bind_param('i', $userid);
+		$query->execute();	
+		return 1;
+	}
 	
+	public function update_character_superuser($char, $user) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_usercharacters SET fk_superuser_ID = ? WHERE character_ID = ?");
+		$query->bind_param('ii', $user, $char);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function update_character_superuser_posts($char, $user) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_posts SET fk_superuser_ID = ? WHERE fk_character_ID = ?");
+		$query->bind_param('ii', $user, $char);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function update_character_superuser_topics($char, $user) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_topics SET fk_superuser_ID = ? WHERE fk_character_ID = ?");
+		$query->bind_param('ii', $user, $char);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function update_character_superuser_achievements($char, $user) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_userachievements SET fk_superuser_ID = ? WHERE fk_character_ID = ?");
+		$query->bind_param('ii', $user, $char);
+		$query->execute();		
+		return 1;
+	}
 	
 	/* TOPICS AND POSTS */
 	
@@ -1263,7 +1375,7 @@ class dbFunctions
 	
 	public function count_topics($id) 
 	{
-		$query = $this->conn->prepare("SELECT COUNT(topic_ID) FROM ".$this->prefix."_topics WHERE fk_forum_ID = ?");
+		$query = $this->conn->prepare("SELECT COUNT(topic_ID) AS res FROM ".$this->prefix."_topics WHERE fk_forum_ID = ?");
 		$query->bind_param('i', $id);
 		$query->execute();	
 		/* Get the result */
@@ -1399,11 +1511,12 @@ class dbFunctions
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();		
-	}	
+	}		
+	
 	
 	public function get_five_latest_overall_posts($accessrank) 
 	{
-		$query = $this->conn->prepare("SELECT p.ingame, t.warning, t.topic_ID, f.forum_ID, f.title AS forumtitle, 
+		$query = $this->conn->prepare("SELECT p.ingame, t.warning, t.topictype, t.topic_ID, f.forum_ID, f.title AS forumtitle, 
 		t.title AS topictitle, p.post_ID, t.last_posted FROM ".$this->prefix."_posts p
 		INNER JOIN ".$this->prefix."_topics t ON
 		p.fk_topic_ID = t.topic_ID
@@ -1411,6 +1524,7 @@ class dbFunctions
 		t.fk_forum_ID = f.forum_ID
 		WHERE f.read_access <= ?
 		GROUP BY t.topic_ID
+		HAVING t.last_posted > '2016-01-01'
 		ORDER BY t.last_posted DESC LIMIT 5");
 		$query->bind_param('i', $accessrank);
 		$query->execute();		
@@ -1420,7 +1534,7 @@ class dbFunctions
 	
 	public function get_fifty_latest_overall_posts($accessrank) 
 	{
-		$query = $this->conn->prepare("SELECT p.ingame, t.warning, t.views, t.datetime, t.topic_ID, f.forum_ID, f.title AS forumtitle, 
+		$query = $this->conn->prepare("SELECT p.ingame, t.topictype, t.warning, t.views, t.datetime, t.topic_ID, f.forum_ID, f.title AS forumtitle, 
 		t.title AS topictitle, p.fk_superuser_ID, p.fk_character_ID, p.post_ID, t.last_posted FROM ".$this->prefix."_posts p
 		INNER JOIN ".$this->prefix."_topics t ON
 		p.fk_topic_ID = t.topic_ID
@@ -1434,6 +1548,64 @@ class dbFunctions
 		/* Get the result */
 		return $query->get_result();		
 	}	
+	
+	public function get_open_topics($accessrank) 
+	{
+		$query = $this->conn->prepare("SELECT p.ingame, t.topictype, t.warning, t.views, t.datetime, t.topic_ID, f.forum_ID, f.title AS forumtitle, 
+		t.title AS topictitle, p.fk_superuser_ID, p.fk_character_ID, p.post_ID, t.last_posted FROM ".$this->prefix."_posts p
+		INNER JOIN ".$this->prefix."_topics t ON
+		p.fk_topic_ID = t.topic_ID
+		INNER JOIN ".$this->prefix."_forums f ON
+		t.fk_forum_ID = f.forum_ID
+		WHERE f.read_access <= ? AND t.topictype = 'Åben tråd'
+		GROUP BY t.topic_ID
+		ORDER BY t.last_posted DESC");
+		$query->bind_param('i', $accessrank);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}	
+	
+	public function count_open_topics($accessrank) 
+	{
+		$query = $this->conn->prepare("SELECT COUNT(topic_ID) AS res FROM ".$this->prefix."_topics t
+		INNER JOIN ".$this->prefix."_forums f ON
+		t.fk_forum_ID = f.forum_ID
+		WHERE f.read_access <= ? AND t.topictype = 'Åben tråd'");
+		$query->bind_param('i', $accessrank);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}
+	
+	public function get_plot_topics($accessrank) 
+	{
+		$query = $this->conn->prepare("SELECT p.ingame, t.topictype, t.warning, t.views, t.datetime, t.topic_ID, f.forum_ID, f.title AS forumtitle, 
+		t.title AS topictitle, p.fk_superuser_ID, p.fk_character_ID, p.post_ID, t.last_posted FROM ".$this->prefix."_posts p
+		INNER JOIN ".$this->prefix."_topics t ON
+		p.fk_topic_ID = t.topic_ID
+		INNER JOIN ".$this->prefix."_forums f ON
+		t.fk_forum_ID = f.forum_ID
+		WHERE f.read_access <= ? AND t.topictype = 'Plottråd'
+		GROUP BY t.topic_ID
+		ORDER BY t.last_posted DESC");
+		$query->bind_param('i', $accessrank);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}	
+	
+	public function count_plot_topics($accessrank) 
+	{
+		$query = $this->conn->prepare("SELECT COUNT(topic_ID) AS res FROM ".$this->prefix."_topics t
+		INNER JOIN ".$this->prefix."_forums f ON
+		t.fk_forum_ID = f.forum_ID
+		WHERE f.read_access <= ? AND t.topictype = 'Plottråd'");
+		$query->bind_param('i', $accessrank);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}
 	
 	public function get_last_topic_poster($topic)
 	{
@@ -1507,7 +1679,7 @@ class dbFunctions
 	public function get_topics_to_show_from_user($id, $offset, $limit, $accessrank) 
 	{
 		$query = $this->conn->prepare("
-		SELECT t.topic_ID, t.title, t.warning, t.fk_superuser_ID, t.fk_character_ID, t.ingame, f.title AS forumtitle, f.forum_ID, t.datetime, 
+		SELECT t.topic_ID, t.title, t.warning, t.topictype, t.fk_superuser_ID, t.fk_character_ID, t.ingame, f.title AS forumtitle, f.forum_ID, t.datetime, 
 		t.views, t.pinned, t.locked
 		FROM ".$this->prefix."_posts p
 		INNER JOIN ".$this->prefix."_topics t ON
@@ -1527,7 +1699,7 @@ class dbFunctions
 	public function get_topics_to_show_from_character($id, $offset, $limit, $accessrank) 
 	{
 		$query = $this->conn->prepare("
-		SELECT t.topic_ID, t.title, t.warning, t.fk_superuser_ID, t.fk_character_ID, t.ingame, f.title AS forumtitle, f.forum_ID, t.datetime, 
+		SELECT t.topic_ID, t.title, t.warning, t.fk_superuser_ID, t.topictype, t.fk_character_ID, t.ingame, f.title AS forumtitle, f.forum_ID, t.datetime, 
 		t.views, t.pinned, t.locked
 		FROM ".$this->prefix."_posts p
 		INNER JOIN ".$this->prefix."_topics t ON
@@ -1547,7 +1719,7 @@ class dbFunctions
 	public function get_ingame_topics_to_show_from_user($id, $offset, $limit, $accessrank) 
 	{
 		$query = $this->conn->prepare("
-		SELECT t.topic_ID, t.title, t.warning, t.fk_superuser_ID, t.fk_character_ID, t.ingame, f.title AS forumtitle, f.forum_ID, t.datetime, 
+		SELECT t.topic_ID, t.title, t.topictype, t.warning, t.fk_superuser_ID, t.fk_character_ID, t.ingame, f.title AS forumtitle, f.forum_ID, t.datetime, 
 		t.views, t.pinned, t.locked
 		FROM ".$this->prefix."_posts p
 		INNER JOIN ".$this->prefix."_topics t ON
@@ -1657,15 +1829,15 @@ class dbFunctions
 		return $query->get_result();		
 	}	
 	
-	public function get_previous_post($datetime) 
+	public function get_previous_post($datetime, $topic) 
 	{
-		$this->conn->real_escape_string($datetime);
-		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_posts WHERE datetime < ? ORDER BY datetime desc LIMIT 1");
-		$query->bind_param('s', $datetime);
+		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_posts WHERE datetime < ? AND fk_topic_ID = ? ORDER BY datetime desc LIMIT 1");
+		$query->bind_param('si', $datetime, $topic);
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();		
 	}	
+		
 	
 	public function post_exists($id) 
 	{
@@ -1711,6 +1883,15 @@ class dbFunctions
 		return $query->get_result();		
 	}	
 	
+	public function count_all_posts_from_character($id) 
+	{
+		$query = $this->conn->prepare("SELECT COUNT(post_ID) AS res FROM ".$this->prefix."_posts WHERE fk_character_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}
+	
 	public function count_ingame_posts_from_character($id) 
 	{
 		$query = $this->conn->prepare("SELECT COUNT(post_ID) AS res FROM ".$this->prefix."_posts WHERE fk_character_ID = ? AND ingame = 1 AND official = 1");
@@ -1745,6 +1926,14 @@ class dbFunctions
 		$query->execute();		
 		return 1;
 	}
+	
+	public function update_topic_lastpost_with_date($date, $topic) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_topics SET last_posted = ? WHERE topic_ID = ?");
+		$query->bind_param('si', $date, $topic);
+		$query->execute();		
+		return 1;
+	}
 		
 	public function update_topic_lock($lock, $topic) 
 	{
@@ -1758,6 +1947,14 @@ class dbFunctions
 	{
 		$query = $this->conn->prepare("UPDATE ".$this->prefix."_topics SET fk_forum_ID = ? WHERE topic_ID = ?");
 		$query->bind_param('ii', $forum, $topic);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function update_topic_author($char, $user, $topic)  
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_topics SET fk_character_ID = ?, fk_superuser_ID = ? WHERE topic_ID = ?");
+		$query->bind_param('iii', $char, $user, $topic);
 		$query->execute();		
 		return 1;
 	}
@@ -1808,6 +2005,62 @@ class dbFunctions
 		$query->bind_param('i', $char);
 		$query->execute();		
 		return 1;
+	}
+	
+	public function update_all_superuser_posts_author_to_guest($user) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_posts SET fk_superuser_ID = 0 WHERE fk_superuser_ID = ?");
+		$query->bind_param('i', $user);
+		$query->execute();		
+		return 1;
+	}
+	public function update_all_superuser_topics_author_to_guest($user) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_topics SET fk_superuser_ID = 0 WHERE fk_superuser_ID = ?");
+		$query->bind_param('i', $user);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function search_posts($keyword, $access, $offset, $limit)
+	{
+		$keyword = "%".$keyword."%";
+		$query = $this->conn->prepare("SELECT p.post_ID, p.fk_topic_ID, p.fk_superuser_ID, p.fk_character_ID, 
+		p.ingame, p.official, p.text, p.datetime, t.fk_forum_ID, f.read_access FROM ".$this->prefix."_posts p
+		INNER JOIN ".$this->prefix."_topics t ON
+		p.fk_topic_ID = t.topic_ID
+		INNER JOIN ".$this->prefix."_forums f ON
+		t.fk_forum_ID = f.forum_ID
+		WHERE p.text LIKE ? AND f.read_access <= ? ORDER BY p.datetime DESC LIMIT ?,?");
+		$query->bind_param('siii', $keyword, $access, $offset, $limit);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}
+	
+	public function count_search_posts($keyword, $access)
+	{
+		$keyword = "%".$keyword."%";
+		$query = $this->conn->prepare("SELECT COUNT(p.post_ID) AS res FROM ".$this->prefix."_posts p
+		INNER JOIN ".$this->prefix."_topics t ON
+		p.fk_topic_ID = t.topic_ID
+		INNER JOIN ".$this->prefix."_forums f ON
+		t.fk_forum_ID = f.forum_ID
+		WHERE p.text LIKE ? AND f.read_access <= ?");
+		$query->bind_param('si', $keyword, $access);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}
+	
+	public function count_prev_posts($topic, $datetime)
+	{
+		$query = $this->conn->prepare("SELECT COUNT(post_ID) AS res FROM ".$this->prefix."_posts
+		WHERE fk_topic_ID = ? AND datetime < ?");
+		$query->bind_param('is', $topic, $datetime);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();	
 	}
 	
 	/* TAGS */
@@ -1914,14 +2167,12 @@ class dbFunctions
 	
 	/* POSTING */
 	
-	public function insert_new_topic($forum, $title, $superuser, $char, $ingame, $official, $pinned, $warning) 
+	public function insert_new_topic($forum, $title, $superuser, $char, $ingame, $official, $pinned, $warning, $topictype) 
 	{
 		$now = date("Y-m-d H:i:s");
-		$this->conn->real_escape_string($title);
-		$this->conn->real_escape_string($warning);
-		$query = $this->conn->prepare("INSERT INTO ".$this->prefix."_topics (fk_forum_ID, title, datetime, last_posted, fk_superuser_ID, fk_character_ID, ingame, official, pinned, warning)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		$query->bind_param('isssiiiiis', $forum, $title, $now, $now, $superuser, $char, $ingame, $official, $pinned, $warning);
+		$query = $this->conn->prepare("INSERT INTO ".$this->prefix."_topics (fk_forum_ID, title, datetime, last_posted, fk_superuser_ID, fk_character_ID, ingame, official, pinned, warning, topictype)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		$query->bind_param('isssiiiiiss', $forum, $title, $now, $now, $superuser, $char, $ingame, $official, $pinned, $warning, $topictype);
 		$query->execute();		
 		/* Get the newly inserted id */
 		return $this->conn->insert_id;
@@ -1939,12 +2190,12 @@ class dbFunctions
 		return $this->conn->insert_id;
 	}	
 	
-	public function update_topic($title, $char, $pinned, $warning, $id)
+	public function update_topic($title, $char, $pinned, $warning, $topictype, $id)
 	{
 		$this->conn->real_escape_string($title);
 		$this->conn->real_escape_string($warning);
-		$query = $this->conn->prepare("UPDATE ".$this->prefix."_topics SET title = ?, fk_character_ID = ?, pinned = ?, warning = ? WHERE topic_ID = ?");
-		$query->bind_param('siisi', $title, $char, $pinned, $warning, $id);
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_topics SET title = ?, fk_character_ID = ?, pinned = ?, warning = ?, topictype = ? WHERE topic_ID = ?");
+		$query->bind_param('siissi', $title, $char, $pinned, $warning, $topictype, $id);
 		$query->execute();		
 		return 1;
 	}	
@@ -2096,6 +2347,14 @@ class dbFunctions
 		return 1;		
 	}
 	
+	public function delete_pollvotes_from_user($userid) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_pollvotes WHERE fk_superuser_ID = ?");
+		$query->bind_param('i', $userid);
+		$query->execute();	
+		return 1;
+	}
+	
 	/* Characterprofiles */
 	
 	public function get_all_races() 
@@ -2225,7 +2484,7 @@ class dbFunctions
 	public function get_messages_sent_to_user($id)
 	{
 		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_messagereceivers r INNER JOIN ".$this->prefix."_messages m
-		ON r.fk_message_ID = m.message_ID WHERE fk_receiver_ID = ? ORDER BY m.datetime DESC");
+		ON r.fk_message_ID = m.message_ID WHERE fk_receiver_ID = ? AND deleted != 1 ORDER BY m.datetime DESC");
 		$query->bind_param('i', $id);
 		$query->execute();		
 		/* Get the result */
@@ -2234,7 +2493,7 @@ class dbFunctions
 	
 	public function get_messages_send_by_user($id)
 	{
-		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_messages WHERE fk_sender_ID = ? ORDER BY datetime DESC");
+		$query = $this->conn->prepare("SELECT * FROM ".$this->prefix."_messages WHERE fk_sender_ID = ? AND sender_delete != 1 ORDER BY datetime DESC");
 		$query->bind_param('i', $id);
 		$query->execute();		
 		/* Get the result */
@@ -2317,6 +2576,46 @@ class dbFunctions
 		$query->execute();		
 		return 1;
 	}		
+	
+	public function delete_messagereceivers_from_superuser($userid) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_messagereceivers WHERE fk_receiver_ID = ?");
+		$query->bind_param('i', $userid);
+		$query->execute();	
+		return 1;
+	}	
+	
+	public function delete_messagereceivers_from_message($messageid) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_messagereceivers WHERE fk_message_ID = ?");
+		$query->bind_param('i', $messageid);
+		$query->execute();	
+		return 1;
+	}	
+	
+	public function delete_messages_from_user($userid) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_messages WHERE fk_sender_ID = ?");
+		$query->bind_param('i', $userid);
+		$query->execute();	
+		return 1;
+	}
+	
+	public function delete_inbox_message($message, $receiver) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_messagereceivers SET deleted = 1 WHERE fk_message_ID = ? AND fk_receiver_ID = ?");
+		$query->bind_param('ii', $message, $receiver);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function delete_sent_message($message) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_messages SET sender_delete = 1 WHERE message_ID = ?");
+		$query->bind_param('i', $message);
+		$query->execute();		
+		return 1;
+	}
 	
 	/* GROUPS */
 	
@@ -2652,7 +2951,7 @@ class dbFunctions
 	
 	public function get_longest_post() 
 	{
-		$query = $this->conn->prepare("SELECT LENGTH(p.text) AS postlength, t.title, c.fk_superuser_ID, t.topic_ID, p.post_ID FROM ".$this->prefix."_posts p 
+		$query = $this->conn->prepare("SELECT LENGTH(p.text) AS postlength, t.title, c.fk_superuser_ID, t.topic_ID, p.post_ID, p.datetime FROM ".$this->prefix."_posts p 
 		INNER JOIN ".$this->prefix."_usercharacters c 
 		ON p.fk_character_ID = c.character_ID
 		INNER JOIN ".$this->prefix."_topics t
@@ -2704,11 +3003,36 @@ class dbFunctions
 	
 	public function count_posts_by_day($month, $year, $day)
 	{
+		
 		$query = $this->conn->prepare("SELECT COUNT(post_ID) AS NumberOfPosts FROM ".$this->prefix."_posts
 		WHERE ingame = 1 AND official = 1
 		AND MONTH(datetime) = ? AND YEAR(datetime) = ? AND DAY(datetime) = ?"
 		);
 		$query->bind_param('iii', $month, $year, $day);
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}
+	
+	public function count_daily_posts_in_a_month()
+	{
+		$query = $this->conn->prepare("SELECT CAST(datetime AS DATE) AS DayName, count(post_ID) AS NumberOfPosts
+		FROM ".$this->prefix."_posts
+		WHERE ingame = 1 AND official = 1 AND datetime > DATE_SUB(NOW(), INTERVAL 30 DAY)
+		GROUP BY DAY(datetime)
+		ORDER BY datetime");
+		$query->execute();		
+		/* Get the result */
+		return $query->get_result();		
+	}
+	
+	public function count_monthly_posts_in_a_year()
+	{
+		$query = $this->conn->prepare("SELECT MONTH(datetime) AS MonthName, YEAR(datetime) AS YearName, count(post_ID) AS NumberOfPosts
+		FROM ".$this->prefix."_posts
+		WHERE ingame = 1 AND official = 1 AND datetime > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+		GROUP BY YEAR(datetime), MONTH(datetime)
+		ORDER BY datetime");
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();		
@@ -2852,6 +3176,16 @@ class dbFunctions
 	{
 		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_userachievements
 		WHERE userachievement_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		
+		return 1;	
+	}
+	
+	public function delete_userachievements_from_superuser($id)
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_userachievements
+		WHERE fk_superuser_ID = ?");
 		$query->bind_param('i', $id);
 		$query->execute();		
 		
@@ -3115,6 +3449,23 @@ class dbFunctions
 		$query->execute();		
 		return 1;
 	}
+	
+	public function delete_chat_message($id)
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_chat WHERE chat_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function delete_ic_chat_message($id)
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_icchat WHERE icchat_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		return 1;
+	}
+	
 	
 }
 ?>

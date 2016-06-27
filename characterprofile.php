@@ -35,13 +35,21 @@ if(isset($_GET['id']))
 		if($character['dead'] == 1) { echo "<span class='userprofiletabletext'>Status:</span> Død<br/>"; }
 		else { if($character['accepted'] == 0) { echo "<span class='userprofiletabletext'>Status:</span> Ikke godkendt<br/>"; }
 		else { if($character['active'] == 1) { echo "<span class='userprofiletabletext'>Status:</span> Aktiv<br/>"; } else { echo "Status: Inaktiv<br/>";}}}
+		$user_has_default_group = $forum->check_users_default_group($id)->fetch_assoc();
+		if($user_has_default_group['res'] > 0)
+		{
+			$defaultgroup = $forum->get_users_default_group($id)->fetch_assoc(); 
+			$grouprank = $forum->get_grouprank($defaultgroup['fk_rank_ID'])->fetch_assoc(); 
+			echo "<span class='userprofiletabletext'>Grupperang: </span>".$grouprank['title']."<br/>";
+		}
 		$creator = $forum->get_superuser($character['fk_superuser_ID'])->fetch_assoc();
 		echo "<span class='userprofiletabletext'>Skaber:</span> <a class='username' style='color:".$creator['color'].";'  
 		href='memberprofile.php?id=".$creator['superuser_ID']."'>".$creator['name']."</a><br/>";
 		
 		if($characterposts['res'] > 0)
 		{
-			echo "<span class='userprofiletableheader'>Posting-statestik: </span>";
+			echo "<br/>";
+			echo "<span class='userprofiletableheader'>Posting-statistik: </span>";
 			$activetopic = $forum->get_most_active_topic_from_char($id)->fetch_assoc();
 			$activeforum = $forum->get_most_active_forum_from_char($id)->fetch_assoc();
 			echo "<a href='characterprofile.php?showposts=".$id."'>[Se karakterens posts]</a> ";
@@ -105,7 +113,8 @@ if(isset($_GET['id']))
 		{
 			echo "<div class='category'><a href=''>Andet</a></div>";
 			echo "<div class='profiledata'>";
-			echo nl2br($parser->parse($profiledata['other'])->getAsHtml())."<br/>";
+			$othertext = nl2br($parser->parse($profiledata['other'])->getAsHtml());
+			echo parseURls($othertext)."<br/>";
 			echo "</div>";	
 		}
 		
@@ -124,8 +133,18 @@ if(isset($_GET['id']))
 		echo "<span class='profiletabletext'>Chakra: </span>".$profiledata['skill_chakra']."<br/>";
 		echo "</div>";
 		
+		if($character['signature'] != "")
+		{
+			echo "<div class='category'><a href=''>Signatur</a></div>";
+				$parser->parse($character['signature']);
+				$sigtext = nl2br($parser->getAsHtml());
+				echo parseURls($sigtext);
+		}
 		echo "</div>";
+		
+		
 	}
+	
 	else
 	{
 		echo "Ingen bruger fundet";
@@ -264,7 +283,8 @@ if(isset($_GET['showposts']))
 				$posttext = substr($stringCut, 0, strrpos($stringCut, ' ')).'...';
 			}
 			else { $posttext = $p['text']; }
-			echo nl2br($parser->parse($posttext)->getAsHtml());	
+			$posttext = nl2br($parser->parse($posttext)->getAsHtml());	
+			echo parseURls($posttext);
 			echo "</div></div>";
 		}
 		
@@ -441,7 +461,9 @@ if(isset($_GET['showtopics']))
 			
 			echo "<a href='viewtopic.php?t=".$t['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'><img src='images/icon_topic_latest.gif' title='Gå til post'/></a>";	
 			echo "&raquo; ".date("d.m.Y G:i", strtotime($t['datetime']));
-			if($t['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$t['warning']."</span>"; } else { echo "<br/>"; }
+			if($t['topictype'] != "" ) { echo "<span class='topicwarning'>".$t['topictype']; if($t['warning'] != "" ) { echo " <span class='italic'>(Advarsel: ".$t['warning'].")</span>"; } echo "</span>"; }
+			else if($t['warning'] != "" ) { echo "<span class='topicwarning'><span class='italic'>Advarsel: ".$t['warning']."</span></span>"; }  
+			else { echo "<br/>"; }
 			echo "i <a class='topictitle' href='viewforum.php?f=".$t['forum_ID']."'>".$t['forumtitle']."</a>";
 			echo "</td>";
 			
@@ -525,6 +547,6 @@ if(isset($_GET['showtopics']))
 	}
 }
 
-
+$pagetitle = $character['name']." - ";
 include('footer.php');
 ?>

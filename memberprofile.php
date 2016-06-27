@@ -68,27 +68,32 @@ if(isset($_GET['id']))
 					
 				}
 				
-				echo "<span class='userprofiletableheader'>Brugeroplysninger: </span>";
-				$age = "";
-				
-				if($member['birthday'] != "0000-00-00")
+				if($user_rank > 0) //only showing this data to members of the site 
 				{
-					$date = new DateTime($member['birthday']);
-					$now = new DateTime();
-					$interval = $now->diff($date);
-					$age = $interval->y;
+					echo "<span class='userprofiletableheader'>Brugeroplysninger: </span>";
+					$age = "";
+					
+					if($member['birthday'] != "0000-00-00")
+					{
+						$date = new DateTime($member['birthday']);
+						$now = new DateTime();
+
+						$interval = $now->diff($date);
+						$age = $interval->y;
+					}
+					
+					
+					echo "<span class='userprofiletabletext'>Alder: </span>".$age."<br/>";
+					echo "<span class='userprofiletabletext'>Geografisk sted: </span>".$member['geography']."<br/>";
+					if($member['website'] != "" ) { echo "<span class='userprofiletabletext'>Hjemmeside: </span>".$member['website']."<br/>"; }
+					if($member['facebook'] != "" ) {echo "<span class='userprofiletabletext'>Facebook: </span>".$member['facebook']."<br/>"; }
+					echo "<span class='userprofiletabletext'>Skype: </span>".$member['skype']."<br/>";
+					if($member['reference'] != "" ) { echo "<span class='userprofiletabletext'>Hvordan fandt du siden? </span>".$member['reference']."<br/>"; }
 				}
-				
-				echo "<span class='userprofiletabletext'>Alder: </span>".$age."<br/>";
-				echo "<span class='userprofiletabletext'>Geografisk sted: </span>".$member['geography']."<br/>";
-				if($member['website'] != "" ) { echo "<span class='userprofiletabletext'>Hjemmeside: </span>".$member['website']."<br/>"; }
-				if($member['facebook'] != "" ) {echo "<span class='userprofiletabletext'>Facebook: </span>".$member['facebook']."<br/>"; }
-				echo "<span class='userprofiletabletext'>Skype: </span>".$member['skype']."<br/>";
-				if($member['reference'] != "" ) { echo "<span class='userprofiletabletext'>Hvordan fandt du siden? </span>".$member['reference']."<br/>"; }
 	
 				if($overall_posts['res'] > 0)
 				{
-					echo "<span class='userprofiletableheader'>Posting-statestik: </span>";
+					echo "<span class='userprofiletableheader'>Posting-statistik: </span>";
 					$activetopic = $forum->get_most_active_topic_from_user($id)->fetch_assoc();
 					$activeforum = $forum->get_most_active_forum_from_user($id)->fetch_assoc();
 					echo "<a href='memberprofile.php?showposts=".$id."'>[Se brugerens posts]</a> ";
@@ -115,7 +120,7 @@ if(isset($_GET['id']))
 					$profiledata = $forum->get_character_profiledata($char['character_ID'])->fetch_assoc();	
 					$race = $forum->get_race($profiledata['fk_race_ID'])->fetch_assoc();
 					
-					if($char['avatar'] == "") { echo "<div class='charimgoverlay' style='background-image:url(images/noavatar.png);background-size:50px;'></div>"; } else { echo "<div class='charimgoverlay' style='background-image:url(".$char['avatar'].");background-size:50px;'></div>"; }
+					if($char['avatar'] == "") { echo "<div class='charimgoverlay' style='background-image:url(images/noavatar.png);'></div>"; } else { echo "<div class='charimgoverlay' style='background-image:url(".$char['avatar'].");'></div>"; }
 					echo "<a href='characterprofile.php?id=".$char['character_ID']."'>".$char['name']."</a>
 					".$profiledata['alignment']." &#9679; ".$race['name']."
 					</div>";	
@@ -129,7 +134,8 @@ if(isset($_GET['id']))
 		echo "<div id='profiletext'>";
 		if ($member['profiletext'] == "") { echo "<p class='center italic'>Ingen profiltekst</p>"; }
 		$parser->parse($member['profiletext']);
-		echo nl2br($parser->getAsHtml());
+		$profiletext = nl2br($parser->getAsHtml());
+		echo parseURls($profiletext);
 		echo "</div>";
 		
 		echo "<div class='category'><a href=''>Trofæer</a></div>";
@@ -397,7 +403,8 @@ if(isset($_GET['showposts']))
 				$posttext = substr($stringCut, 0, strrpos($stringCut, ' ')).'...';
 			}
 			else { $posttext = $p['text']; }
-			echo nl2br($parser->parse($posttext)->getAsHtml());	
+			$posttext = nl2br($parser->parse($posttext)->getAsHtml());	
+			echo parseURls($posttext);
 			echo "</div></div>";
 		}
 		
@@ -519,6 +526,7 @@ if(isset($_GET['showtopics']))
 		// show << link to go back to page 1
 		echo " <a class='navlink' href='memberprofile.php?showtopics=".$id."&currentpage=1'>1</a> ";
 		}
+
 		
 		} // end if
 
@@ -596,7 +604,9 @@ if(isset($_GET['showtopics']))
 			}	
 			echo "<a href='viewtopic.php?t=".$t['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'><img src='images/icon_topic_latest.gif' title='Gå til post'/></a>";	
 			echo "&raquo; ".date("d.m.Y G:i", strtotime($t['datetime']));
-			if($t['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$t['warning']."</span>"; } else { echo "<br/>"; }
+			if($t['topictype'] != "" ) { echo "<span class='topicwarning'>".$t['topictype']; if($t['warning'] != "" ) { echo " <span class='italic'>(Advarsel: ".$t['warning'].")</span>"; } echo "</span>"; }
+			else if($t['warning'] != "" ) { echo "<span class='topicwarning'><span class='italic'>Advarsel: ".$t['warning']."</span></span>"; }  
+			else { echo "<br/>"; }
 			echo "i <a class='topictitle' href='viewforum.php?f=".$t['forum_ID']."'>".$t['forumtitle']."</a>";
 			echo "</td>";
 			
@@ -683,7 +693,6 @@ if(isset($_GET['showtopics']))
 	
 		echo "</div>";
 		/****** end build pagination links ******/
-		
 	}
 	
 	else
@@ -692,7 +701,7 @@ if(isset($_GET['showtopics']))
 	
 	}
 }
-
+$pagetitle = $member['name']." - ";
 include('footer.php');
 
 ?>

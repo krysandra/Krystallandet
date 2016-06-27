@@ -24,11 +24,20 @@ echo "<div class='sidebarcontent'>";
 echo "<span class='center'>";
 echo "<h5>Denne måned</h5>";
 echo "<p class='center'>";
+
+$time = microtime(true);
+$time = explode(' ', $time);
+$time = $time[1] + $time[0];
+$finish = $time;
+$bftopposters_time = round(($finish - $start), 4);
+
 $monthly_topposters = $forum->get_topposters_monthly(date('m'),date('Y'));
+
 while($user = $monthly_topposters->fetch_assoc())
 {
 	echo "<a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a>: ".$user['NumberOfPosts']."<br/>";	
 }
+
 echo "</p>";
 echo "<h5>I alt</h5>";
 echo "<p class='center'>";
@@ -38,7 +47,15 @@ while($user = $overall_topposters->fetch_assoc())
 	echo "<a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a>: ".$user['NumberOfPosts']."<br/>";	
 }
 echo "</p>";
+
 echo "</span></div></div>";
+
+$time = microtime(true);
+$time = explode(' ', $time);
+$time = $time[1] + $time[0];
+$finish = $time;
+$topposters_time = round(($finish - $start), 4);
+
 
 echo "<div class='sidebox'>";
 echo "<div class='topbar'>";
@@ -59,6 +76,19 @@ echo "</div></div>";
 
 echo "<div class='sidebox'>";
 echo "<div class='topbar'>";
+echo "<h3>Plots</h3>";
+echo "</div>";
+echo "<div class='sidebarcontent center'>";
+echo "<img src='http://i3.photobucket.com/albums/y82/Ametyst/klplots_zpsogfxcjcj.png'/>";
+echo "<p><a>Kzar Moras porte er blevet åbnet</a></p>";
+echo "<h5>Den første plage</h5>";
+echo "<p class='smallsidebartext bold'>";
+echo "<a href='search.php?plots'>FIND PLOTTRÅDE</a>";
+echo "</p>";
+echo "</div></div>";
+
+echo "<div class='sidebox'>";
+echo "<div class='topbar'>";
 echo "<h3>Statistik</h3>";
 echo "</div>";
 echo "<div class='sidebarcontent'>";
@@ -72,9 +102,15 @@ echo "<a class='username' style='color:".$newestuser['color'].";' href='memberpr
 
 $ingametopics = $forum->count_all_ingame_topics()->fetch_assoc(); echo "Emner (ingame): ".$ingametopics['res']."<br/>";
 $alltopics = $forum->count_all_topics()->fetch_assoc(); echo "Emner (i alt): ".$alltopics['res']."<br/>";
-$ingameposts = $forum->count_all_ingame_posts()->fetch_assoc(); "Posts (ingame): ".$ingameposts['res']."<br/>";
+$ingameposts = $forum->count_all_ingame_posts()->fetch_assoc(); echo "Posts (ingame): ".$ingameposts['res']."<br/>";
 $allposts = $forum->count_all_posts()->fetch_assoc(); echo "Posts (i alt): ".$allposts['res']."<br/>";
 echo "</div></div>";
+
+$time = microtime(true);
+$time = explode(' ', $time);
+$time = $time[1] + $time[0];
+$finish = $time;
+$statistics_time = round(($finish - $start), 4);
 
 echo "<div class='sidebox'>";
 echo "<div class='topbar'>";
@@ -129,6 +165,14 @@ echo "<h3>Forumposts</h3>";
 echo "</div>";
 echo "<div class='sidebarcontent'>";
 $latestposts = $forum->get_five_latest_overall_posts($user_rank);
+
+
+$time = microtime(true);
+$time = explode(' ', $time);
+$time = $time[1] + $time[0];
+$finish = $time;
+$latesttopics_time = round(($finish - $start), 4);
+
 echo "<table>";
 while($post = $latestposts->fetch_assoc())
 {
@@ -139,18 +183,33 @@ while($post = $latestposts->fetch_assoc())
 	
 	echo "<tr><td>";
 	echo "<a class='bold' href='viewtopic.php?t=".$post['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'>".$post['topictitle']."</a><br/>";
-	if($post['warning'] != ""){ echo "<span class='italic'>".$post['warning']."</span><br/>"; }
+	if($post['topictype'] != ""){ echo "<span class='topicwarning'>".$post['topictype']."</span>"; }
+	if($post['warning'] != ""){ echo "<span class='topicwarning italic'>".$post['warning']."</span>"; }
 	$lastposter = $forum->get_last_topic_poster($post['topic_ID'])->fetch_assoc();
 	echo "<span class='smallsidebartext'>";
 	if($post['ingame'] == 1) 
 	{ 
-		$character = $forum->get_character($lastposter['fk_character_ID'])->fetch_assoc();
-		echo "af <a class='username' style='color:".$character['color'].";' href='characterprofile.php?id=".$lastposter['fk_character_ID']."'>".$character['name']."</a> ";
+		if($lastposter['fk_character_ID'] == 0)
+		{
+			echo "af <a class='username'>slettet karakter</a> ";	
+		}
+		else
+		{
+			$character = $forum->get_character($lastposter['fk_character_ID'])->fetch_assoc();
+			echo "af <a class='username' style='color:".$character['color'].";' href='characterprofile.php?id=".$lastposter['fk_character_ID']."'>".$character['name']."</a> ";
+		}
 	}
 	else
 	{
-		$superuser = $forum->get_superuser($lastposter['fk_superuser_ID'])->fetch_assoc();
-		echo "af <a class='username' style='color:".$superuser['color'].";' href='memberprofile.php?id=".$lastposter['fk_superuser_ID']."'>".$superuser['name']."</a> ";
+		if($lastposter['fk_superuser_ID'] == 0)
+		{
+			echo "af <a class='username'>Gæst</a> ";	
+		}
+		else
+		{
+			$superuser = $forum->get_superuser($lastposter['fk_superuser_ID'])->fetch_assoc();
+			echo "af <a class='username' style='color:".$superuser['color'].";' href='memberprofile.php?id=".$lastposter['fk_superuser_ID']."'>".$superuser['name']."</a> ";
+		}
 	}
 	echo date("d.m.Y G:i", strtotime($post['last_posted']))."<br/>";
 	echo " i <a class='bold' href='viewforum.php?f=".$post['forum_ID']."'>".$post['forumtitle']."</a><br/>";
@@ -159,9 +218,19 @@ while($post = $latestposts->fetch_assoc())
 }
 echo "</table>";
 echo "<p class='center'>";
-echo "<a href='search.php?latestposts'>Se flere</a>";
+echo "<a href='search.php?latestposts'>(Se flere)</a>";
+echo "</p>";
+echo "<p class='center smallsidebartext bold'>";
+echo "<a href='search.php?openthreads'>FIND ÅBNE TRÅDE</a>";
 echo "</p>";
 echo "</div></div>";
+
+$time = microtime(true);
+$time = explode(' ', $time);
+$time = $time[1] + $time[0];
+$finish = $time;
+$latestposts_time = round(($finish - $start), 4);
+
 
 echo "<div class='sidebox'>";
 echo "<div class='topbar'>";
@@ -173,4 +242,105 @@ echo "<a href='http://lingdumstudog.deviantart.com/'>LINGDUMSTUDOG</a><br/>";
 echo "<a href='http://sandara.deviantart.com/'>Sandara</a><br/>";
 echo "</div></div>";
 
+echo "<div class='sidebox'>";
+echo "<div class='topbar'>";
+echo "<h3>Søg</h3>";
+echo "</div>";
+echo "<div class='sidebarcontent center'>";
+echo "<form method='get' action='search.php'>";
+echo "<input type='text' placeholder='Søg i alle forumposts..' name='keyword'/><br/>";
+echo "<input type='submit' value='Søg' name='search'/>";
+echo "</form>";
+echo "</div></div>";
+
+echo "<div class='dropbtn' onclick='show()'><h3>Hurtigmenu</h3></div>";
+		echo
+		"<div id='submenu' style='display:none;'>";
+		$toplevelforums = $forum->get_toplevel_forums();
+		$categorylist = array();
+		
+		while($toplevelforum = $toplevelforums->fetch_assoc())
+		{
+			$categorylist[$toplevelforum['above_ID']] = $toplevelforum;	
+		}
+		
+		$max = count($categorylist);
+		$next = 0;
+		
+		for($i = 0; $i < $max; $i++)
+		{
+			$margin = 0;
+			$currentforum = $categorylist[$next];
+			
+						$stack = array();
+						if ($user_rank == 3 && $currentforum['read_access'] >= 1 || $user_rank == 2 && $currentforum['read_access'] <= 2 
+						|| $user_rank == 1 && $currentforum['read_access'] <= 1 || $currentforum['read_access'] == 0 )
+						{
+						array_push($stack, array($currentforum['forum_ID'], $margin, "<span class='bold'>".$currentforum['title']."</span>"));
+						}
+						
+						while(!empty($stack))
+						{
+							$currentforumid = array_pop($stack);
+							
+							$subforums = $forum->get_all_subforums($currentforumid[0]);
+							$subforumlist = array();
+							
+							while($subforum = $subforums->fetch_assoc())
+							{
+								$subforumlist[$subforum['above_ID']] = $subforum;	
+							}
+
+							echo "<a style='margin-left:".$currentforumid[1]."px' href='viewforum.php?f=".$currentforumid[0]."'>".$currentforumid[2]."</a>";
+							
+							//$subforumnumber = $forum->count_subforums($currentforumid[0])->fetch_assoc();
+							//$subforums = $forum->get_all_subforums($currentforumid[0]);
+							if(count($subforumlist) > 0) { $margin = $currentforumid[1]+12; }
+							$submax = count($subforumlist);
+							$subnext = 0;
+							$subarray = array();
+							
+							for($j = 0; $j < $submax; $j++)
+							{
+								$subforum = $subforumlist[$subnext];
+								if ($user_rank == 3 && $subforum['read_access'] >= 1 || $user_rank == 2 && $subforum['read_access'] <= 2 
+								|| $user_rank == 1 && $subforum['read_access'] <= 1 || $subforum['read_access'] == 0 )
+								{
+									array_push($subarray, array($subforum['forum_ID'], $margin, $subforum['title']));
+								}
+								$subnext = $subforum['forum_ID'];
+							}
+							$subarray = array_reverse($subarray);
+							foreach($subarray as $val)
+							{
+								array_push($stack, $val);
+								
+							}
+							
+						}
+						
+			
+			$next = $currentforum['forum_ID'];	
+			
+		}
+		
+      	echo "</div>";
+		
+$time = microtime(true);
+$time = explode(' ', $time);
+$time = $time[1] + $time[0];
+$finish = $time;
+$quickmenu_time = round(($finish - $start), 4);		
+		
 ?>
+
+<script type="text/javascript">
+function show() {
+    var x = document.getElementById('submenu');
+    if (x.style.display === 'none') {
+        x.style.display = 'block';
+    } else {
+        x.style.display = 'none';
+    }
+}
+</script>

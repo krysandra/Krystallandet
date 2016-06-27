@@ -66,7 +66,7 @@ if(isset($_GET['chars']))
 	
 	if ($charnumber['res']  == 0 )
 	{
-		echo "<span class='infotext'>Ingen karakterer fundet<br/></span>";	
+		echo "<div class='center'><span class='infotext'>Ingen karakterer fundet<br/></span></div>";	
   
 	}
 	else
@@ -91,14 +91,15 @@ if(isset($_GET['chars']))
 	<th>Skaber</th>
 	<th>Oprettelsesdato</th></thead></tr>";
 	echo "<tbody>";
+	
 	while($member = $characters->fetch_assoc())
 	{
 		echo "<tr>";
 		echo "<td><span class='hidden'>".$member['name']."</span>
 		<a class='username' href='characterprofile.php?id=".$member['character_ID']."' style='color:".$member['color'].";'>".$member['name']."</a></td>";
 		
-		$profiledata = $forum->get_character_profiledata($member['character_ID'])->fetch_assoc();	
-		$race = $forum->get_race($profiledata['fk_race_ID'])->fetch_assoc();
+		//$profiledata = $forum->get_character_profiledata($member['character_ID'])->fetch_assoc();	
+		$race = $forum->get_race($member['fk_race_ID'])->fetch_assoc();
 		
 		if($member['dead'] == 1) { echo "<td class='activeuser'>Død</td>"; } 
 		else
@@ -108,17 +109,19 @@ if(isset($_GET['chars']))
 		}
 		
 		echo "<td>".$race['name']."</td>";
-		echo "<td>".$profiledata['age']."</td>";
-		echo "<td>".$profiledata['alignment']."</td>";
+		echo "<td>".$member['age']."</td>";
+		echo "<td>".$member['alignment']."</td>";
 		
-		$characterposts = $forum->count_ingame_posts_from_character($member['character_ID'])->fetch_assoc();
-		echo "<td>".$characterposts['res']."</td>";
-		$superuser = $forum->get_superuser($member['fk_superuser_ID'])->fetch_assoc();
-		echo "<td><span class='hidden'>".$superuser['name']."</span>
-		<a class='username' style='color:".$superuser['color'].";' href='memberprofile.php?id=".$superuser['superuser_ID']."'>".$superuser['name']."</a></td>";
-		echo "<td>".date("d.m.Y", strtotime($member['date_created']))."</td>";
+		//$characterposts = $forum->count_ingame_posts_from_character($member['character_ID'])->fetch_assoc();
+		if($member['characterposts'] == "") { $characterposts = 0; } else { $characterposts = $member['characterposts']; }
+		echo "<td>".$characterposts."</td>";
+		//$superuser = $forum->get_superuser($member['fk_superuser_ID'])->fetch_assoc();
+		echo "<td><span class='hidden'>".$member['superusername']."</span>
+		<a class='username' style='color:".$member['superusercolor'].";' href='memberprofile.php?id=".$member['fk_superuser_ID']."'>".$member['superusername']."</a></td>";
+		echo "<td><span class='hidden'>".date("Y.m.d", strtotime($member['date_created']))."</span>".date("d.m.Y", strtotime($member['date_created']))."</td>";
 		echo "</tr>";
 	}
+	
 	echo "</tbody>";
 	echo "<table>";	
 	
@@ -156,7 +159,7 @@ if(isset($_GET['groups']))
 	while($group = $grouplist->fetch_assoc())
 	{	
 	
-		echo "<div class='category'><a href=''>".$group['title']."</a></div>";
+		echo "<div class='category' id='".$group['group_ID']."'><a href='#".$group['group_ID']."'>".$group['title']."</a></div>";
 	
 		echo "<table id='grouptable".$count."' class='tablesorter grouplist'>";
 		echo "<thead>";
@@ -232,21 +235,27 @@ if(empty($_GET))
 	echo "<tbody>";
 	while($member = $memberlist->fetch_assoc())
 	{
-		$ingame_posts = $forum->count_ingame_posts_from_superuser($member['superuser_ID'])->fetch_assoc(); 
-		$overall_posts = $forum->count_all_posts_from_superuser($member['superuser_ID'])->fetch_assoc(); 
-		$activechars = $forum->count_active_characters_from_superuser($member['superuser_ID'])->fetch_assoc();
-		$allchars = $forum->count_accepted_characters_from_superuser($member['superuser_ID'])->fetch_assoc();
-		$achievementnumber = $forum->count_all_userachievements_from_user($member['superuser_ID'])->fetch_assoc();
+		//$ingame_posts = $forum->count_ingame_posts_from_superuser($member['superuser_ID'])->fetch_assoc(); 
+		//$overall_posts = $forum->count_all_posts_from_superuser($member['superuser_ID'])->fetch_assoc(); 
+		//$activechars = $forum->count_active_characters_from_superuser($member['superuser_ID'])->fetch_assoc();
+		//$allchars = $forum->count_accepted_characters_from_superuser($member['superuser_ID'])->fetch_assoc();
+		//$achievementnumber = $forum->count_all_userachievements_from_user($member['superuser_ID'])->fetch_assoc();
+		if($member['ingame_posts'] == "") { $ingame_posts = 0; } else { $ingame_posts = $member['ingame_posts']; }
+		if($member['overall_posts'] == "") { $overall_posts = 0; } else { $overall_posts = $member['overall_posts']; }
+		if($member['activechars'] == "") { $activechars = 0; } else { $activechars = $member['activechars']; }
+		if($member['allchars'] == "") { $allchars = 0; } else { $allchars = $member['allchars']; }
+		if($member['achievementnumber'] == "") { $achievementnumber = 0; } else { $achievementnumber = $member['achievementnumber']; }
+		
 		echo "<tr>";
 		echo "<td><span class='hidden'>".$member['name']."</span>
 		<a class='username' style='color:".$member['color'].";' href='memberprofile.php?id=".$member['superuser_ID']."'>".$member['name']."</a></td>";
-		echo "<td class='center'>".$ingame_posts['res']."</td>";
-		echo "<td class='center'>".$overall_posts['res']."</td>";
-		echo "<td class='center'>".$activechars['res']."</td>";
-		echo "<td class='center'>".$allchars['res']."</td>";
-		echo "<td>".$achievementnumber['res']."</td>";
-		echo "<td class='center'>".date("d.m.Y", strtotime($member['date_joined']))."</td>";
-		echo "<td class='center'>".date("d.m.Y G:i", strtotime($member['last_active']))."</td>";
+		echo "<td class='center'>".$ingame_posts."</td>";
+		echo "<td class='center'>".$overall_posts."</td>";
+		echo "<td class='center'>".$activechars."</td>";
+		echo "<td class='center'>".$allchars."</td>";
+		echo "<td>".$achievementnumber."</td>";
+		echo "<td class='center'><span class='hidden'>".date("Y.m.d", strtotime($member['date_joined']))."</span>".date("d.m.Y", strtotime($member['date_joined']))."</td>";
+		echo "<td class='center'><span class='hidden'>".date("Y.m.d H:i", strtotime($member['last_active']))."</span>".date("d.m.Y H:i", strtotime($member['last_active']))."</td>";
 		echo "</tr>";
 	}
 	echo "</tbody>";

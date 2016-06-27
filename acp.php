@@ -25,6 +25,7 @@ else
 		echo "<a href='acp.php?mode=wantedlist'>Efterlysninger"; 
 		if ($wantedposts_need_approval['res'] > 0) { echo " (".$wantedposts_need_approval['res'].")"; } echo "</a>"; 
 		echo "<a href='acp.php?mode=achievements'>Trofæer</a>";
+		echo "<a href='acp.php?mode=chat'>Chatbeskeder</a>";
 		echo "</div></div>";
 
 		if(empty($_GET))
@@ -519,6 +520,8 @@ else
 			{
 				$change = $_POST['change'];
 				if(!empty($_POST['groupmember'])){
+
+
 				// Loop to store and display values of individual checked checkbox.
 				foreach($_POST['groupmember'] as $selected){
 					    $groupmember = $forum->get_groupmember($selected)->fetch_assoc();
@@ -626,6 +629,7 @@ else
 					$pass = htmlspecialchars($_POST['password']);
 					$confirm = htmlspecialchars($_POST['password_confirm']);	
 					
+
 					if($pass != $confirm) 
 					{ 
 						$error = true; $errormsgcore = $errormsgcore."Værdierne indtastet i \"kodeord\" og \" bekræft kodeord\" var ikke ens.<br/>";
@@ -766,9 +770,40 @@ else
 				
 				echo "<hr/>";
 				
+				if($_POST['submit_userdelete'])
+				{
+					$forum->delete_userachievements_from_superuser($superuser['superuser_ID']);
+					$forum->delete_forummod_statuses_from_user($superuser['superuser_ID']);
+					$forum->delete_messagereceivers_from_superuser($superuser['superuser_ID']);
+					$usermessages = $forum->get_messages_send_by_user($superuser['superuser_ID']);
+					while($msg = $usermessages->fetch_assoc())
+					{
+						$forum->delete_messagereceivers_from_message($msg['message_ID']) ;
+					}
+					$forum->delete_messages_from_user($superuser['superuser_ID']);
+					$forum->delete_pollvotes_from_user($superuser['superuser_ID']); 
+					
+					//set posts and topics to guest
+					$forum->update_all_superuser_posts_author_to_guest($superuser['superuser_ID']); 
+					$forum->update_all_superuser_topics_author_to_guest($superuser['superuser_ID']); 
+					
+					//delete the user
+					$log = $forum->insert_modlog("Brugeren ".$username." blev slettet fra systemet.", $user_logged_in_ID, 1);
+					$forum->delete_superuser($superuser['superuser_ID']);
+					header('Location:acp.php?mode=users');
+					
+				}
+				
 				echo "<h2>Brugerens karakterer</h2>";				
 				$numberofchars = $forum->count_all_characters_from_superuser($superuser['superuser_ID'])->fetch_assoc();
-				if($numberofchars['res'] < 1) { echo "Denne bruger har endnu ingen karakterer"; }
+				if($numberofchars['res'] < 1) 
+				{ 
+				echo "<span class='italic'>Denne bruger har endnu ingen karakterer.</span> <br/><br/>"; 
+				echo "<form method='post'><input class='deletebutton' type='submit' value='Slet bruger' name='submit_userdelete'"; ?>
+						onclick='return confirm("Er du sikker på, at du vil slette brugeren? Dette er permanent og kan ikke fortrydes.")'
+						<?php echo "/></form>";
+						echo "<br/>";
+				}
 				else 
 				{
 					echo "<form method='get'>";
@@ -1057,8 +1092,42 @@ else
 				} // end char deletions
 				
 				
+				if($_POST['submit_char_ownerchange'])
+				{
+					$newsuperuser = $_POST['superuser'];
+					$superusercheck = $forum->check_for_existing_superuser($newsuperuser)->fetch_assoc();
+					
+					if ($superusercheck['res'] > 0)
+					{
+						//change usercharacter
+						$forum->update_character_superuser($character['character_ID'], $newsuperuser);
+						//change topics
+						$forum->update_character_superuser_topics($character['character_ID'], $newsuperuser);
+						//change posts
+						$forum->update_character_superuser_posts($character['character_ID'], $newsuperuser);
+						//change achievements
+						$forum->update_character_superuser_achievements($character['character_ID'], $newsuperuser);
+						
+						$newsuperuserdata = $forum->get_superuser($newsuperuser)->fetch_assoc();
+						$log = $forum->insert_modlog("Karakteren ".$character['name']." blev overført til superbrugeren ".$newsuperuserdata['name'], $user_logged_in_ID, 1);
+						header('Location:acp.php?charedit='.$character['character_ID']);
+					}
+				}
+				
 				echo "<hr/>";
+				
+				echo "<div class='center'>";
+				echo "<br/><span class='bold'>Flyt karakter til anden superbruger:</span><br/><br/>";
+				echo "<form method='post'>
+				
+				Bruger-ID: <input type='number' class='numberinput_small' name='superuser' required/> 
+				<input type='submit' value='Udfør' name='submit_char_ownerchange'"; ?>
+				onclick='return confirm("Er du sikker på, at du vil ændre skaberen af denne karakter?")'
+				<?php echo "/><br/>";
+				echo "</div>";
+				
 				echo "<br/><br/><a href='acp.php?username=".$superuser['name']."&edituser=Udfør'>Tilbage</a>";
+
 			}
 			else
 			{
@@ -1299,7 +1368,6 @@ else
 					echo "<tr><td colspan='2'><input type='submit' name='submit_edit_forum' value='Gem ændringer'/></td></tr>";		
 					echo "<form>"; echo "</table>";
 					
-					echo "</div>";
 					
 					if($_POST['submit_edit_forum'])
 					{
@@ -1919,11 +1987,75 @@ else
 			echo "</div></div>";
 			
 		} // End achievements
+		
+		if($_GET['mode'] == 'chat')
+		{
+			if($_POST['delete_chatmsg'])
+			{
+				$msgid = $_POST['msgid'];
+				$forum->delete_chat_message($msgid);
+				header('Location:acp.php?mode=chat');
+			}
+			if($_POST['delete_icchatmsg'])
+			{
+				$msgid = $_POST['msgid'];
+				$forum->delete_ic_chat_message($msgid);
+				header('Location:acp.php?mode=chat');
+			}
+			
+			
+			$confirmmsg = "";
+			echo "<div id='acp_page'>";
+			echo "<div class='category'><a href=''>Chatbeskeder</a></div>";
+			echo "<div id='acp_content' class='center'>";
+			
+			$chatdata = $forum->get_chat_messages();
+			echo "<h4>20 seneste chatbox-beskeder:</h4>";
+			echo "<table>";
+			while($chatmsg = $chatdata->fetch_assoc())
+			{
+				echo "<tr><td style='border:1px solid #c5c5c5; padding: 5px;'>";
+				echo $chatmsg['message'];
+				echo "</td>";
+				echo "<form method='post'>";
+				echo "<input type='hidden' name='msgid' value='".$chatmsg['chat_ID']."'/>";
+				echo "<td style='border:1px solid #c5c5c5; padding: 5px;'><input type='submit' name='delete_chatmsg' value='Slet chatbesked' "; ?>
+						onclick='return confirm("Er du sikker på, at du vil fjerne denne besked?")'
+						<?php echo "/></td>";
+				echo "</form>";
+				echo "</tr>";
+			}
+			echo "</table>";
+			
+			echo "<hr/>";
+			
+			$chatdata = $forum->get_ic_chat_messages();
+			echo "<h4>20 seneste IC-chatbox-beskeder:</h4>";
+			echo "<table>";
+			while($chatmsg = $chatdata->fetch_assoc())
+			{
+				echo "<tr><td style='border:1px solid #c5c5c5; padding: 5px;'>";
+				echo $chatmsg['message'];
+				echo "</td>";
+				echo "<form method='post'>";
+				echo "<input type='hidden' name='msgid' value='".$chatmsg['icchat_ID']."'/>";
+				echo "<td style='border:1px solid #c5c5c5; padding: 5px;'><input type='submit' name='delete_icchatmsg' value='Slet chatbesked' "; ?>
+						onclick='return confirm("Er du sikker på, at du vil fjerne denne besked?")'
+						<?php echo "/></td>";
+				echo "</form>";
+				echo "</tr>";
+			}
+			echo "</table>";
+			
+			echo "</div></div>";
+			
+		}
 
 	echo "</div>"; //acp-wrap
 
 }
 ?>
+
 
 <?php
 include('footer.php');

@@ -78,7 +78,8 @@ if(empty($_GET))
 }
 if(isset($_GET['confirmed']))
 {
-	echo "Din bruger er blevet oprettet. Tryk på \"Log ind\" i menuen for at få adgang til forummet og oprette din første karakter.";
+	echo "<hr/>";
+	echo "<p>Din bruger er blevet oprettet. Tryk på \"Log ind\" i menuen for at få adgang til forummet og oprette din første karakter.</p>";
 }
 echo "</div>";
 			

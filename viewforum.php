@@ -100,13 +100,12 @@ if(isset($_GET['f']))
 		{
 			echo "<div class='category'><a href='viewforum.php?f=".$viewforum['forum_ID']."'>Emner</a></div>";
 			
-			
 			/* Pages if number of topics > topics per page */
 			
 			$topicnumber = $forum->count_topics($f)->fetch_assoc();
 			$totalpages = ceil($topicnumber['res'] / $topicsperpage);
 			
-			echo "<div class='pagenavigaton'>";			
+			echo "<div class='topforumpagenavigaton'>";			
 			if (isset($_GET['currentpage']) && is_numeric($_GET['currentpage'])) { $currentpage = (int) $_GET['currentpage']; } 
 			else { $currentpage = 1; } 
 			if ($currentpage > $totalpages) { $currentpage = $totalpages; } 
@@ -190,7 +189,8 @@ if(isset($_GET['f']))
 					}
 				}	
 				echo " &raquo; ".date("j. M Y G:i", strtotime($t['datetime']));
-				if($t['warning'] != "" ) { echo "<span class='topicwarning'>Advarsel: ".$t['warning']."</span>"; }
+				if($t['topictype'] != "" ) { echo "<span class='topicwarning'>".$t['topictype']; if($t['warning'] != "" ) { echo " <span class='italic'>(Advarsel: ".$t['warning'].")</span>"; } echo "</span>"; }
+				else if($t['warning'] != "" ) { echo "<span class='topicwarning'><span class='italic'>Advarsel: ".$t['warning']."</span></span>"; }
 
 				echo "</td>";
 				
@@ -230,7 +230,7 @@ if(isset($_GET['f']))
 			}
 			echo "</table>";
 			
-			echo "<div class='pagenavigaton'>";			
+			echo "<div class='forumpagenavigaton'>";			
 			if ($currentpage > 1) 
 			{
 				$prevpage = $currentpage - 1;
@@ -265,6 +265,7 @@ if(isset($_GET['f']))
 			echo "</div>";				
 			/* End building navigation */
 			
+			
 			if ($user_rank >= $viewforum['write_access'])	
 			{
 				echo "<a href='posting.php?f=".$f."' class='forumbutton'>Nyt Emne</a>";		
@@ -282,5 +283,6 @@ echo "</div>";
 
 ?>
 <?php
+$pagetitle = $viewforum['title']." - ";
 include('footer.php');
 ?>

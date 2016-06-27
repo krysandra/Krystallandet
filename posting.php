@@ -64,10 +64,11 @@ if(isset($_GET['f']))
 	
 			if ((isset($_POST['submit_new_topic'])) && $postforum['ingame'] == 1)	
 			{	
-			  $topic_title = htmlspecialchars($_POST["title"]);	
-			  $topic_text = htmlspecialchars($_POST["posttext"]);	
+			  $topic_title = htmlspecialchars($_POST["title"], ENT_QUOTES, 'UTF-8');
+			  $topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');
 			  $topic_author = $_POST["poster"];	
 			  $topic_pinned = 0;
+			  $topictype = "";
 			  
 			  if($postforum['official'] == 0)
 			  {
@@ -100,21 +101,21 @@ if(isset($_GET['f']))
 				//Warning handling
 				if($topic_warning == "yes")
 				{
-					 $topic_warning = htmlspecialchars($_POST["warningtype"]);  
+					 $topic_warning = htmlspecialchars($_POST["warningtype"], ENT_QUOTES, 'UTF-8');
 				}
 			    else
 			    {
 					  $topic_warning = "";
 				}		
 				if($_POST['pinned'] == "yes") { $topic_pinned = 1; }	
-						
+				if($_POST['open'] == "yes") { $topictype = "Åben tråd"; } if($_POST['plot'] == "yes") { $topictype = "Plottråd"; } 						
 				if($validate_tag < 1) // No user was found, display error message	
 				{	
 					$errormsg = "<br/><br/>Karakteren ".$topic_next.", som du forsøgte at tagge, findes ikke eller er endnu ikke godkendt.";	
 				}	
 				else //Insert the data	
 				{
-					$new_topic = $forum->insert_new_topic($postforum['forum_ID'], $topic_title, $user_id, $topic_author, 1, $postforum['official'], $topic_pinned, $topic_warning);					
+					$new_topic = $forum->insert_new_topic($postforum['forum_ID'], $topic_title, $user_id, $topic_author, 1, $postforum['official'], $topic_pinned, $topic_warning, $topictype);					
 					$addpost = $forum->insert_new_post($new_topic, $topic_text, $user_id, $topic_author, 1, $postforum['official']);
 		
 					//Tag the next user
@@ -169,8 +170,8 @@ if(isset($_GET['f']))
 	
 			if ((isset($_POST['submit_new_topic'])) && $postforum['ingame'] == 0)	
 			{
-				$topic_title = htmlspecialchars($_POST["title"]);
-				$topic_text = htmlspecialchars($_POST["posttext"]);
+				$topic_title = htmlspecialchars($_POST["title"], ENT_QUOTES, 'UTF-8');
+				$topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');
 				$topic_author = $_POST["poster"];
 				$topic_pinned = 0;
 								
@@ -184,7 +185,7 @@ if(isset($_GET['f']))
 					if($_POST['pinned'] == "yes") { $topic_pinned = 1; }
 					if($topic_author == $user_id)	  		
 					{		  		
-						$new_topic = $forum->insert_new_topic($postforum['forum_ID'], $topic_title, $user_id, 0, 0, $postforum['official'], $topic_pinned, "");							
+						$new_topic = $forum->insert_new_topic($postforum['forum_ID'], $topic_title, $user_id, 0, 0, $postforum['official'], $topic_pinned, "", "");							
 						$addpost = $forum->insert_new_post($new_topic, $topic_text, $user_id, 0, 0, $postforum['official']);		
 					}
 					
@@ -212,7 +213,7 @@ if(isset($_GET['f']))
 			if($postforum['ingame'] == 1 && ($accepted_chars < 1 || $user_rank == 0))			
 			{
 				echo "<p class='errormsg center'>Du har ikke adgang til at skrive i dette forum.<br/>
-				Dette kan skyldes, at du ikke er logget ind, eller at du ikke har nogen accepterede karakter.</p>";	
+				Dette kan skyldes, at du ikke er logget ind, eller at du ikke har nogen accepterede karakterer.</p>";	
 			}
 			else
 			{
@@ -258,7 +259,7 @@ if(isset($_GET['f']))
 				echo "</tr>";	
 		
 				echo "<tr><td class='bold'>Titel: </td>";		
-				echo "<td><input class='postinginput titleinput' type='text' name='title' value='".htmlspecialchars($topic_title, ENT_QUOTES, 'UTF-8')."' maxlength='65' required/></td>";			
+				echo "<td><input class='postinginput titleinput' type='text' name='title' value='".$topic_title."' maxlength='65' required/></td>";			
 				echo "</tr>";
 				echo "<tr><td colspan='2'>";		
 				echo "<textarea name='posttext' class='postarea postingtext'>".$topic_text."</textarea></td>";			
@@ -275,10 +276,20 @@ if(isset($_GET['f']))
 					echo "<tr><td class='bold'>Angiv som opslag: </td>";		
 					echo "<td><input type='checkbox' name='pinned' value='yes' /> (Emnet vises øverst på underforummets side sammen med andre opslag)</td>";			
 					echo "</tr>";
+					if($user_rank > 1 && $postforum['ingame'] == 1)
+					{
+						echo "<tr><td class='bold'>Angiv som plottråd: </td>";		
+						echo "<td><input type='checkbox' name='plot' value='yes' /> (Dette overskriver et evt. valg om 'åben tråd')</td>";			
+						echo "</tr>";
+					}
 				}
 		
 				if ($postforum['ingame'] == 1 && $postforum['official'] == 1)
 				{
+					echo "<tr><td class='bold'>Angiv som åben tråd: </td>";		
+					echo "<td><input type='checkbox' name='open' value='yes' /> (Alle må deltage i tråden)</td>";			
+					echo "</tr>";
+					
 					echo "<tr><td class='bold'>Tilføj advarsel:</td>";
 					echo "<td><input type='radio' name='warning' value='no' checked required/>Ingen ";
 					echo "<input type='radio' name='warning' value='yes' required/>";
@@ -379,7 +390,8 @@ if(isset($_GET['t']))
 	
 	if($topic_exists['res'] > 0)
 	{	
-		$posttopic = $forum->get_topic($t)->fetch_assoc();		
+		$posttopic = $forum->get_topic($t)->fetch_assoc();	
+			
 		$f = $posttopic['fk_forum_ID'];
 		$postforum = $forum->get_forum($f)->fetch_assoc();	
 		
@@ -391,7 +403,7 @@ if(isset($_GET['t']))
 			$topic_text = "[quote]".$quotepost['text']."[/quote]";
 		}
 	
-		if ($user_rank < $postforum['write_access'])	
+		if ($user_rank < $postforum['write_access'] || $posttopic['locked'] == 1)	
 		{
 			header('Location:viewforum.php?f='.$f);	
 		}
@@ -423,7 +435,7 @@ if(isset($_GET['t']))
 			if ((isset($_POST['submit_new_post'])) && $postforum['ingame'] == 1)
 			{
 		
-			  $topic_text = htmlspecialchars($_POST["posttext"]);
+			  $topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');
 			  $topic_author = $_POST["poster"];	
 			  
 			  if($postforum['official'] == 0)
@@ -551,7 +563,7 @@ if(isset($_GET['t']))
 	
 			if ((isset($_POST['submit_new_post'])) && $postforum['ingame'] == 0)
 			{
-				$topic_text = htmlspecialchars($_POST["posttext"]);	
+				$topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');
 				$topic_author = $_POST["poster"];
 				
 				if ($topic_text == "")
@@ -582,7 +594,7 @@ if(isset($_GET['t']))
 			
 			{
 				echo "Du har ikke adgang til at skrive i dette forum.<br/>
-				Dette kan skyldes, at du ikke er logget ind, eller at du ikke har nogen accepterede karakter.";	
+				Dette kan skyldes, at du ikke er logget ind, eller at du ikke har nogen accepterede karakterer.";	
 			}
 			else
 			{
@@ -619,7 +631,7 @@ if(isset($_GET['t']))
 					
 				}
 				
-				arsort($topicpostertime);
+				asort($topicpostertime);
 		
 				echo "<tr><td class='bold'>Forfatter: </td>";
 
@@ -682,6 +694,9 @@ if(isset($_GET['t']))
 					}
 		
 					echo "<input type='radio' name='nextposter' value='textinput' id='nextposter_radio' required> ";				
+
+
+
 					echo "<input type='text' name='nextposter_value' id='nextposter_value'/>";
 					?>
 		
@@ -741,7 +756,8 @@ if(isset($_GET['t']))
 					echo date("j. M Y G:i", strtotime($p['datetime']));
 					echo "<br/>";
 					echo "</span>";
-					echo nl2br($parser->parse($p['text'])->getAsHtml());	
+					$posttext = nl2br($parser->parse($p['text'])->getAsHtml());	
+					echo parseURls($posttext);
 					echo "</div>";
 				}
 			
@@ -798,11 +814,12 @@ else if(isset($_GET['edit']))
 			if($_POST['submit_edited_post'] && $postforum['ingame'] == 1)
 			{
 			  $topic_author = $_POST["poster"];		
-			  $topic_title = htmlspecialchars($_POST["title"]);	
-			  $topic_text = htmlspecialchars($_POST["posttext"]);	
+			  $topic_title = htmlspecialchars($_POST["title"], ENT_QUOTES, 'UTF-8');	
+			  $topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');
 			  $topic_next = $_POST["nextposter"];
 			  $topic_warning = $_POST["warning"];
 			  $topic_pinned = 0;	
+			  $topictype = "";
 			  
 			  if ($topic_text == "")
 			  {
@@ -825,13 +842,14 @@ else if(isset($_GET['edit']))
 				//Warning handling
 				if($topic_warning == "yes")
 				{
-					 $topic_warning = htmlspecialchars($_POST["warningtype"]);  
+					 $topic_warning = htmlspecialchars($_POST["warningtype"], ENT_QUOTES, 'UTF-8'); 
 				}
 			    else
 			    {
 					  $topic_warning = "";
 				}		
 				if($_POST['pinned'] == "yes") { $topic_pinned = 1; }	
+				if($_POST['open'] == "yes") { $topictype = "Åben tråd"; } if($_POST['plot'] == "yes") { $topictype = "Plottråd"; } 	
 						
 				if($validate_tag < 1) // No user was found, display error message	
 				{	
@@ -841,7 +859,7 @@ else if(isset($_GET['edit']))
 				{
 					if($_POST['edittype'] == "topic") //Only updating the topic if we actually was editing the topic and not just a post.
 					{
-						$update_topic = $forum->update_topic($topic_title, $topic_author, $topic_pinned, $topic_warning, $topic_to_edit['topic_ID']);
+						$update_topic = $forum->update_topic($topic_title, $topic_author, $topic_pinned, $topic_warning, $topictype, $topic_to_edit['topic_ID']);
 					}
 					$update_post = $forum->update_post($topic_text, $topic_author, $post_id);				
 		
@@ -864,8 +882,8 @@ else if(isset($_GET['edit']))
 			if($_POST['submit_edited_post'] && $postforum['ingame'] == 0)
 			{
 			  $topic_author = $_POST["poster"];		
-			  $topic_title = htmlspecialchars($_POST["title"]);	
-			  $topic_text = htmlspecialchars($_POST["posttext"]);	
+			  $topic_title = htmlspecialchars($_POST["title"], ENT_QUOTES, 'UTF-8');
+			  $topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');	
 			  $topic_pinned = 0;	
 			  
 			  if ($topic_text == "")
@@ -879,7 +897,7 @@ else if(isset($_GET['edit']))
 						
 					if($_POST['edittype'] == "topic") //Only updating the topic if we actually was editing the topic and not just a post.
 					{
-						$update_topic = $forum->update_topic($topic_title, 0, $topic_pinned, "", $topic_to_edit['topic_ID']);
+						$update_topic = $forum->update_topic($topic_title, 0, $topic_pinned, "", "", $topic_to_edit['topic_ID']);
 						
 						if($_POST['pollquestion'] != "" && $_POST['polloptions'] != "")
 						{
@@ -978,14 +996,14 @@ else if(isset($_GET['edit']))
 				{
 					echo "<input type='hidden' name='edittype' value='topic'/>";
 					echo "<tr><td class='bold'>Titel: </td>";		
-					echo "<td><input type='text' name='title' class='postinginput' value='".htmlspecialchars($topic_to_edit['title'], ENT_QUOTES, 'UTF-8')."' maxlength='65' required/></td>";			
+					echo "<td><input type='text' name='title' class='postinginput' value='".$topic_to_edit['title']."' maxlength='65' required/></td>";			
 					echo "</tr>";
 				}
 				else
 				{
 					echo "<tr><td class='bold'>Titel: </td>";
 					echo "<td>Sv: ".$topic_to_edit['title']."</td>";	
-					echo "<input type='hidden' name='title' value='".htmlspecialchars($topic_to_edit['title'], ENT_QUOTES, 'UTF-8')."'/>";	
+					echo "<input type='hidden' name='title' value='".$topic_to_edit['title']."'/>";	
 					echo "</tr>";
 				}
 				
@@ -1119,16 +1137,45 @@ else if(isset($_GET['edit']))
 				//Pinned topic, if the post is the first post and if the logged in user has the correct rank
 				if(($user_rank > 1 || $forummod['res'] > 0) && $firstpost['post_ID'] == $post_id)
 				{
+					echo "<hr/>";
 					echo "<tr><td class='bold'>Angiv som opslag: </td>";		
 					if($topic_to_edit['pinned'] == 1) { echo "<td><input type='checkbox' name='pinned' value='yes' checked/>"; }
 					else { echo "<td><input type='checkbox' name='pinned' value='yes' />"; }
 					echo "(Emnet vises øverst på underforummets side sammen med andre opslag)</td>";			
 					echo "</tr>";	
+					if($user_rank > 1 && $postforum['ingame'] == 1)
+					{
+						echo "<tr><td class='bold'>Angiv som plottråd: </td><td>";	
+						if($topic_to_edit['topictype'] == 'Plottråd') { echo "<input type='checkbox' name='plot' value='yes' checked/>"; }
+						else { echo "<input type='checkbox' name='plot' value='yes' />"; }
+						echo "(Dette overskriver et evt. valg om 'åben tråd')</td>";			
+						echo "</tr>";
+					}
+					else
+					{
+						if($topic_to_edit['topictype'] == 'Plottråd') { echo "<input type='hidden' name='plot' value='yes'/>";	}
+					}
 				}
 				else //if the user can't edit the pinned status, we still want to keep the old one
 				{	
 					if($topic_to_edit['pinned'] == 1) { echo "<input type='hidden' name='pinned' value='yes'/>";	}
 				}
+				
+				
+		
+				if ($postforum['ingame'] == 1 && $postforum['official'] == 1)
+				{
+					echo "<tr><td class='bold'>Angiv som åben tråd: </td><td>";	
+					if($topic_to_edit['topictype'] == 'Åben tråd') { echo "<input type='checkbox' name='open' value='yes' checked/>"; }
+					else { echo "<input type='checkbox' name='open' value='yes' />"; }	
+					echo "(Alle må deltage i tråden)</td>";			
+					echo "</tr>";
+				}
+				else
+				{
+					if($topic_to_edit['topictype'] == 'Åben tråd') { echo "<input type='hidden' name='open' value='yes'/>";	}
+				}
+				
 				
 				//If the topic has a poll, the user should have the option to delete it
 				$topic_has_poll = $forum->check_if_topic_has_poll($topic_to_edit['topic_ID'])->fetch_assoc();
@@ -1201,8 +1248,11 @@ else if(isset($_GET['delete']))
 		$post_to_delete = $forum->get_post($post_id)->fetch_assoc();	
 		$topic_to_delete = $forum->get_topic($post_to_delete['fk_topic_ID'])->fetch_assoc();
 		$lastpost = $forum->get_last_post($topic_to_delete['topic_ID'])->fetch_assoc();
+		$firstpost = $forum->get_first_post($topic_to_delete['topic_ID'])->fetch_assoc();
+		$isfirstpost = false; if($firstpost['post_ID'] == $post_id) { $isfirstpost = true; }
 		$forummod = $forum->forummod_exists($topic_to_delete['fk_forum_ID'], $user_logged_in_ID)->fetch_assoc();
 		$postdatetime = $post_to_delete['datetime'];
+		$prevpost = $forum->get_previous_post($postdatetime, $post_to_delete['fk_topic_ID'])->fetch_assoc();
 		
 		if($user_rank > 1 || $forummod['res'] > 0 || ($post_to_delete['fk_superuser_ID'] == $user_logged_in_ID && $lastpost['post_ID'] == $post_id))
 		{
@@ -1223,7 +1273,7 @@ else if(isset($_GET['delete']))
 						//delete all votes from options
 						$forum->delete_votes_from_poll_option($option['option_ID']); 
 					}
-					//delete all options
+					//delete all options  
 					$forum->delete_options_from_poll($topicpoll['poll_ID']);
 					//delete the poll
 					$forum->delete_poll($topicpoll['poll_ID']);
@@ -1232,9 +1282,19 @@ else if(isset($_GET['delete']))
 				header('Location:viewforum.php?f='.$topic_to_delete["fk_forum_ID"]);
 				exit;	
 			}
+			else //update last posted datetime
+			{
+				$newlastpost = $forum->get_last_post($topic_to_delete['topic_ID'])->fetch_assoc();
+				$forum->update_topic_lastpost_with_date($newlastpost['datetime'], $topic_to_delete['topic_ID']);
+				echo $isfirstpost;
+				if($isfirstpost)
+				{
+					$newfirstpost = $forum->get_first_post($topic_to_delete['topic_ID'])->fetch_assoc();
+					$forum->update_topic_author($newfirstpost['fk_character_ID'], $newfirstpost['fk_superuser_ID'], $topic_to_delete['topic_ID']);
+				}
+			}
 		}		
 		
-		$prevpost = $forum->get_previous_post($postdatetime)->fetch_assoc();
 		header('Location:viewtopic.php?t='.$topic_to_delete["topic_ID"].'#'.$prevpost["post_ID"]);	
 		
 	} // End if post exists

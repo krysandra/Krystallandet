@@ -36,25 +36,21 @@ echo "</div>";
 echo "<div class='statistic'>";
 echo "<h5>Posting</h5>";
 echo "<p>Længste post: "; $longestpost = $forum->get_longest_post()->fetch_assoc(); 
-$numofposts = $forum->get_numberof_posts($longestpost['topic_ID'])->fetch_assoc();	
-$posts = $forum->get_posts($longestpost['topic_ID'], 0, $numofposts['res']);
-$currentpage = 1; $counter = 1;
-while($p = $posts->fetch_assoc())
-{
-	if($p['post_ID'] == $longestpost['post_ID']) { break; }
-	$currentpage = ceil($counter / 20);
-	$counter++;
-}
+
+$numberofprevposts = $forum->count_prev_posts($longestpost['topic_ID'], $longestpost['datetime'])->fetch_assoc();
+$numberofprevposts = $numberofprevposts['res'] + 1;
+$topicpagenumber = ceil($numberofprevposts / $postsperpage);
+
 $superuser = $forum->get_superuser($longestpost['fk_superuser_ID'])->fetch_assoc();
 echo "af <a class='username' href='memberprofile.php?id=".$superuser['superuser_ID']."'>".$superuser['name']."</a> ";
-echo "i <a href='viewtopic.php?t=".$longestpost['topic_ID']."&currentpage=".$currentpage."#".$longestpost['post_ID']."'>".$longestpost['title']."</a> 
+echo "i <a href='viewtopic.php?t=".$longestpost['topic_ID']."&currentpage=".$topicpagenumber."#".$longestpost['post_ID']."'>".$longestpost['title']."</a> 
 (".$longestpost['postlength']." tegn)</p>";
 echo "<p>Ingame posts (Denne måned): "; $poststhismonth = $forum->count_posts_by_month(date('m'),date('Y'))->fetch_assoc(); echo $poststhismonth['NumberOfPosts']."</p>"; 
 echo "<p>Ingame posts (I alt): "; $ingameposts = $forum->count_all_ingame_posts()->fetch_assoc(); echo $ingameposts['res']."</p>";
 echo "</div>";
 
 
-echo "<div class='statistic'>";
+echo "<div class='statistic statchart'>";
 echo "<h5>Racefordeling</h5>";
 echo "<div class='chartholder'>";
 echo "<canvas id='racechart' width='400' height='400'/>";
@@ -245,7 +241,7 @@ var pieData1 = [
 
 
 <?php
-echo "<div class='statistic'>";
+echo "<div class='statistic statchart'>";
 echo "<h5>Fordeling af tilhørsforhold</h5>";
 echo "<div class='chartholder'>";
 echo "<canvas id='alignmentchart' width='350' height='350'/>";
@@ -256,11 +252,11 @@ echo "</div>";
 
 var pieData2 = [
 				{
-					<?php $alignment1 = $forum->get_number_of_characters_by_alignment('Retsmæssig God')->fetch_assoc(); ?>
+					<?php $alignment1 = $forum->get_number_of_characters_by_alignment('Retmæssig God')->fetch_assoc(); ?>
 					value: <?php echo $alignment1['numberOfChars'] ?>,
 					color:"#658b68",
 					highlight: "#779d7a",
-					label: "Retsmæssig God"
+					label: "Retmæssig God"
 				},
 				{
 					<?php $alignment2 = $forum->get_number_of_characters_by_alignment('Neutral God')->fetch_assoc(); ?>
@@ -277,18 +273,18 @@ var pieData2 = [
 					label: "Kaotisk God"
 				},
 				{
-					<?php $alignment4 = $forum->get_number_of_characters_by_alignment('Retsmæssig Neutral')->fetch_assoc(); ?>
+					<?php $alignment4 = $forum->get_number_of_characters_by_alignment('Retmæssig Neutral')->fetch_assoc(); ?>
 					value: <?php echo $alignment4['numberOfChars'] ?>,
 					color: "#898989",
 					highlight: "#a1a1a1",
-					label: "Retsmæssig Neutral"
+					label: "Retmæssig Neutral"
 				},
 				{
-					<?php $alignment5 = $forum->get_number_of_characters_by_alignment('Rigtig Neutral')->fetch_assoc(); ?>
+					<?php $alignment5 = $forum->get_number_of_characters_by_alignment('Sand Neutral')->fetch_assoc(); ?>
 					value: <?php echo $alignment5['numberOfChars'] ?>,
 					color: "#b5b5b5",
 					highlight: "#c2c2c2",
-					label: "Rigtig Neutral"
+					label: "Sand Neutral"
 				},
 				{
 					<?php $alignment6 = $forum->get_number_of_characters_by_alignment('Kaotisk Neutral')->fetch_assoc(); ?>
@@ -298,11 +294,12 @@ var pieData2 = [
 					label: "Kaotisk Neutral"
 				},
 				{
-					<?php $alignment7 = $forum->get_number_of_characters_by_alignment('Retsmæssig Ond')->fetch_assoc(); ?>
+
+					<?php $alignment7 = $forum->get_number_of_characters_by_alignment('Retmæssig Ond')->fetch_assoc(); ?>
 					value: <?php echo $alignment7['numberOfChars'] ?>,
 					color: "#671b1b",
 					highlight: "#7d2727",
-					label: "Retsmæssig Ond"
+					label: "Retmæssig Ond"
 				},
 				{
 					<?php $alignment8 = $forum->get_number_of_characters_by_alignment('Neutral Ond')->fetch_assoc(); ?>
@@ -323,12 +320,31 @@ var pieData2 = [
 	</script>
 
 <?php
-echo "<div class='statistic'>";
-echo "<h5>Ingame post-statestik (seneste måned)</h5>";
+echo "<div class='statistic statchart'>";
+echo "<h5>Ingame post-statistik (seneste måned)</h5>";
 echo "<div class='chartholder'>";
 echo "<canvas id='postchart' width='100%' height='50px'/>";
 echo "</div>";
 echo "</div>";
+
+$postsperday = array();
+$dailydata = $forum->count_daily_posts_in_a_month();
+
+while($dailyposts = $dailydata->fetch_assoc())
+{
+	$postsperday[$dailyposts['DayName']] = $dailyposts['NumberOfPosts'];
+}
+
+$count = 30;
+while($count >= 0)
+{
+	$date = date('Y-m-d');
+	$subdate = strtotime($date.'-'.$count.' days');	
+	$datekey = (string) date('Y-m-d', $subdate);
+	if(!array_key_exists($datekey, $postsperday)) { $postsperday[$datekey] = 0; }	
+	$count--;		
+}
+ksort($postsperday);
 ?>
 
 
@@ -336,14 +352,12 @@ echo "</div>";
 	var barData = {
 		<?php
 		echo "labels: [";
-		$count = 30;
-		while($count >= 0)
+		
+		foreach($postsperday as $k => $v)
 		{
-			$date = date('Y-m-d');
-			$time = strtotime($date.'-'.$count.' days');
-			echo '"'.date("d. M", $time).'",';	
-			$count--;
+			echo '"'.date("d.m", strtotime($k)).'",';		
 		}
+		
 		echo "],";		
 		?>
 		datasets : [
@@ -354,15 +368,12 @@ echo "</div>";
 				highlightStroke : "rgba(151,187,205,1)",
 				<?php
 				echo "data : [";
-				$count = 30;
-				while($count >= 0)
+				
+				foreach($postsperday as $k => $v)
 				{
-					$date = date('Y-m-d');
-					$time = strtotime($date.'-'.$count.' days');
-					$dailynumberofposts = $forum->count_posts_by_day(date("m", $time), date("Y", $time), date("d", $time))->fetch_assoc();
-					echo $dailynumberofposts['NumberOfPosts'].",";
-					$count--;
+					echo $v.",";
 				}
+
 				echo "]";
 				?>
 			}
@@ -373,12 +384,34 @@ echo "</div>";
 	</script>
 
 <?php
-echo "<div class='statistic'>";
-echo "<h5>Ingame post-statestik (seneste år)</h5>";
+echo "<div class='statistic statchart'>";
+echo "<h5>Ingame post-statistik (seneste år)</h5>";
 echo "<div class='chartholder'>";
 echo "<canvas id='postchartyearly' width='100%' height='50px'/>";
 echo "</div>";
 echo "</div>";
+
+$postspermonth = array();
+$monthlydata = $forum->count_monthly_posts_in_a_year();
+
+while($monthlyposts = $monthlydata->fetch_assoc())
+{
+	$num_padded = sprintf("%02d", $monthlyposts['MonthName']);
+	$key = $monthlyposts['YearName']."-".$num_padded;
+	$postspermonth[$key] = $monthlyposts['NumberOfPosts'];
+}
+
+$count = 12;
+while($count >= 0)
+{
+	$date = date('Y-m-d');
+	$subdate = strtotime($date.'-'.$count.' months');	
+	$datekey = (string) date('Y-m', $subdate);
+	if(!array_key_exists($datekey, $postspermonth)) { $postspermonth[$datekey] = 0; }	
+	$count--;		
+}
+ksort($postspermonth);
+array_shift($postspermonth);
 ?>
 
 <script>
@@ -406,14 +439,9 @@ echo "</div>";
 				
 				<?php
 				echo "data : [";
-				$count = 11;
-				while($count >= 0)
+				foreach($postspermonth as $k => $v)
 				{
-					$date = date('Y-m-d');
-					$time = strtotime($date.'-'.$count.' months');
-					$monthlynumberofposts = $forum->count_posts_by_month(date("m", $time), date("Y", $time))->fetch_assoc();
-					echo $monthlynumberofposts['NumberOfPosts'].",";
-					$count--;
+					echo $v.",";
 				}
 				echo "]";
 				?>

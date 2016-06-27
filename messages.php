@@ -24,7 +24,7 @@ else
 		
 		echo "<div class='category'><a href=''>Indbakke</a></div>";
 		echo "<table id='msgbox'>";
-		echo "<tr><th>Emne</th><th>Afsender</th><th>Dato</th></tr>";
+		echo "<tr><th>Emne</th><th>Afsender</th><th>Dato</th><th></th></tr>";
 		
 		while($m = $inboxmessages->fetch_assoc())
 		{
@@ -35,6 +35,11 @@ else
 			echo "</td>";
 			echo "<td><a class='username' style='color:".$sender['color'].";' href='memberprofile.php?id=".$sender['superuser_ID']."'>".$sender['name']."</a> </td>";
 			echo "<td> ".date("d.m.Y G:i", strtotime($m['datetime']))."</td>";	
+			echo "<td>"; 
+			echo "<a href='messages.php?deletereceived=".$m['message_ID']."'"; ?>
+				onclick='return confirm("Er du sikker på, at du vil slette denne besked? Den vil ikke længere kunne ses i din indbakke.")'
+				<?php echo "><img src='images/topic_delete.png' title='Slet post'/></a> ";
+			echo "</td>";	
 			echo "</tr>";
 		}
 		
@@ -190,6 +195,11 @@ else
 				}
 				echo "</td>";
 				echo "<td> ".date("d.m.Y G:i", strtotime($m['datetime']))."</td>";	
+				echo "<td>"; 
+				echo "<a href='messages.php?deletesent=".$m['message_ID']."'"; ?>
+				onclick='return confirm("Er du sikker på, at du vil slette denne besked? Den vil ikke længere kunne ses i din udbakke.")'
+				<?php echo "><img src='images/topic_delete.png' title='Slet post'/></a> ";
+				echo "</td>";	
 				echo "</tr>";
 			}
 		}
@@ -232,16 +242,19 @@ else
 					
 				echo "</div>";
 				echo "<div class='postcontent'>";
+				
 				echo "<a href='messages.php?mode=view&m=".$message['message_ID']."' class='posttitle'>".$message['title']."</a>";
 				echo "<span class='postauthor'>";
 				echo "af <a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a>";
 				echo " » ".date("d.m.Y G:i", strtotime($message['datetime']))."</span>";
 				
-				echo nl2br($parser->parse($message['text'])->getAsHtml());
+				$msgtext = nl2br($parser->parse($message['text'])->getAsHtml());
+				echo parseURls($msgtext);
 				if($user['signature'] != "")
 				{
 					echo "<div class='postsignature'>";
-					echo nl2br($parser->parse($user['signature'])->getAsHtml());
+					$sigtext = nl2br($parser->parse($user['signature'])->getAsHtml());
+					echo parseURls($sigtext);
 					echo "</div>"; //signature	
 				}
 				echo "</div>"; //postcontent
@@ -252,6 +265,25 @@ else
 				echo "<a class='forumbutton' href='messages.php?mode=new&receiver=".$user['superuser_ID']."&title=sv: ".$message['title']."'>Besvar</a>";
 			}
 		}
+	}
+	
+	if(isset($_GET['deletereceived']))
+	{
+		$message_id = $_GET['deletereceived'];
+		$forum->delete_inbox_message($message_id, $user_logged_in_ID);
+		header('Location:messages.php');	
+	}
+	
+	if(isset($_GET['deletesent']))
+	{
+		$message_id = $_GET['deletesent'];
+		$message = $forum->get_message($message_id)->fetch_assoc();
+		if($message['fk_sender_ID'] == $user_logged_in_ID)
+		{
+			$forum->delete_sent_message($message_id);
+		}
+
+		header('Location:messages.php?mode=sent');
 	}
 	
 	echo "</div>";

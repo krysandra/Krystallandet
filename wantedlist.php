@@ -44,10 +44,10 @@ if(isset($_GET['new']))
 	if($_POST['submit_new_wantedpost'])
 	{
 		$wantedchar = $_POST["nextposter_value"];
-		$crime = $_POST['crime'];
-		$features = $_POST['features'];
-		$whereabouts = $_POST['whereabouts'];
-		$bounty = $_POST['bounty'];
+		$crime = htmlspecialchars($_POST['crime'], ENT_QUOTES, 'UTF-8');
+		$features = htmlspecialchars($_POST['features'], ENT_QUOTES, 'UTF-8');
+		$whereabouts = htmlspecialchars($_POST['whereabouts'], ENT_QUOTES, 'UTF-8');
+		$bounty = htmlspecialchars($_POST['bounty'], ENT_QUOTES, 'UTF-8');
 		
 		$tryfindchar = $forum->try_find_character_by_name($wantedchar)->fetch_assoc(); 	
 		if($tryfindchar['res'] > 0)

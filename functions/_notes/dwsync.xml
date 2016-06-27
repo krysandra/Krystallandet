@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="hash.php" server="ftp.krystallandet.dk" local="131083079449181715" remote="130921848000000000" Dst="2" />
-<file name="bbparser.php" server="ftp.krystallandet.dk" local="131083079433310807" remote="131030224800000000" Dst="2" />
-<file name="tablesorter_pager.js" server="ftp.krystallandet.dk" local="131007836787409404" remote="131007800400000000" Dst="1" />
-<file name="tablesorter.js" server="ftp.krystallandet.dk" local="131006901600000000" remote="131006901600000000" Dst="1" />
-<file name="slimtable.min.js" server="ftp.krystallandet.dk" local="131083079451541850" remote="131007769800000000" Dst="2" />
-<file name="slimtable.css" server="ftp.krystallandet.dk" local="131083079449181715" remote="131018173800000000" Dst="2" />
-<file name="findsubforums.php" server="ftp.krystallandet.dk" local="131083079448721689" remote="131033142600000000" Dst="2" />
-<file name="SimpleImage.php" server="ftp.krystallandet.dk" local="131088202445306821" remote="131088130200000000" Dst="2" />
+<file name="hash.php" server="ftp.krystallandet.dk" local="131083079449181715" remote="131094471000000000" Dst="2" />
+<file name="bbparser.php" server="ftp.krystallandet.dk" local="131083079433310807" remote="131094471000000000" Dst="2" />
+<file name="tablesorter_pager.js" server="ftp.krystallandet.dk" local="131007836787409404" remote="131094471000000000" Dst="2" />
+<file name="tablesorter.js" server="ftp.krystallandet.dk" local="131006901600000000" remote="131094471000000000" Dst="2" />
+<file name="slimtable.min.js" server="ftp.krystallandet.dk" local="131083079451541850" remote="131094471000000000" Dst="2" />
+<file name="slimtable.css" server="ftp.krystallandet.dk" local="131083079449181715" remote="131094471000000000" Dst="2" />
+<file name="findsubforums.php" server="ftp.krystallandet.dk" local="131083079448721689" remote="131094471000000000" Dst="2" />
+<file name="SimpleImage.php" server="ftp.krystallandet.dk" local="131088202445306821" remote="131094471000000000" Dst="2" />
+<file name="urlparser.php" server="ftp.krystallandet.dk" local="131089966810000000" remote="131094471000000000" Dst="2" />
+<file name="jquery.are-you-sure.js" server="ftp.krystallandet.dk" local="131089233587097348" remote="131094471000000000" Dst="2" />
 </dwsync>

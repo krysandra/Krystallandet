@@ -37,7 +37,7 @@ $forum = new dbFunctions();
 						 {
 							 $character = $forum->get_character($chatmsg['fk_character_ID'])->fetch_assoc();
 							 
-							 $text[] = $chatmsg['message']; 
+							 $text[] = nl2br($chatmsg['message']); 
 							 $usernames[] = $character['name'];
 							 $datetimes[] = date("j. M y, H:i", strtotime($chatmsg['datetime']));
 							 $colors[] = $character['color'];  
@@ -70,7 +70,7 @@ $forum = new dbFunctions();
     	 
     	 case('send'):
 
-			 $userid = htmlentities(strip_tags($_POST['userid']));
+			 $userid = htmlspecialchars($_POST["userid"], ENT_QUOTES, 'UTF-8');
 			 
 			$reg_exUrl = "/(http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(\/\S*)?/";
 			 $reg_exItalic = "#\[i\](.+)\[\/i\]#iUs";
@@ -80,7 +80,7 @@ $forum = new dbFunctions();
 			 $reg_exSmall = "#\[small\](.+)\[\/small\]#iUs";
 			 $reg_exColor = "/\[color\=?(.*?)?\](.*?)\[\/color\]/ms";
 			 
-			  $message = htmlentities(strip_tags($_POST['message']));
+			  $message = htmlspecialchars($_POST["message"], ENT_QUOTES, 'UTF-8');
 		 	   if(($message) != "\n"){
         	
 			    if(preg_match($reg_exUrl, $message, $url))
