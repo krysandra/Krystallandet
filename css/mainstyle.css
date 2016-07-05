@@ -112,14 +112,14 @@ textarea
 }
 #forumheader
 {
-	background-image: url('http://krystallandet.dk/kl_pictures/2016_logo.png');
+	background-image: url('http://krystallandet.dk/kl_pictures/toplogo2016.png');
 	background-repeat: no-repeat;
 	width: 100%;
 	max-width: 938px;	
 	margin-left: 1px;
 	border: 1px #FFF;
-	height: 451px;
-	
+	height: 413px;
+	margin-top: -9px;
 }
 #content
 {
@@ -193,6 +193,36 @@ textarea
 	margin-left: 10px;
 	margin-right: 10px;
 	margin-bottom: 10px;
+}
+
+#footer #focus
+{
+	color: #3d4652;
+	border: 1px solid #c5c5c5;
+	background-color: #e6e6e6;
+	padding: 10px;
+	margin-top: -10px;
+	margin-bottom: 10px;
+	font-size: 11px;
+}
+
+#footer #focus h5
+{
+	margin: 0;
+	text-decoration: none;
+	color: #674c31;
+	font-size: 12px;
+	font-family: Verdana, Geneva, sans-serif;
+	text-transform: uppercase;
+	padding: 5px;
+}
+
+#footer #focus .focusimg
+{
+	border: 1px solid #3d4652;
+	box-shadow: 0px 3px 10px #888888;
+	margin-top: 3px;
+	margin-bottom: 5px;
 }
 
 #footer .category

@@ -774,6 +774,7 @@ else
 				{
 					$forum->delete_userachievements_from_superuser($superuser['superuser_ID']);
 					$forum->delete_forummod_statuses_from_user($superuser['superuser_ID']);
+					$forum->delete_drafts_from_superuser($superuser['superuser_ID']);
 					$forum->delete_messagereceivers_from_superuser($superuser['superuser_ID']);
 					$usermessages = $forum->get_messages_send_by_user($superuser['superuser_ID']);
 					while($msg = $usermessages->fetch_assoc())

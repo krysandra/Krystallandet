@@ -9,7 +9,7 @@ include('header.php');
 
 echo "<div class='category'><a href=''>Mine tråde</a></div>";
 echo "<div id='topmenu'>";
-echo "<a href='mytopics.php'>Ubesvarede</a> &#9679; <a href='mytopics.php?all'>Alle (ingame)</a> &#9679; <a href='mytopics.php?offgame'>Offgame</a>";
+echo "<a href='mytopics.php'>Ubesvarede</a> &#9679; <a href='mytopics.php?all'>Alle (ingame)</a> &#9679; <a href='mytopics.php?offgame'>Offgame</a> &#9679; <a href='mytopics.php?drafts'>Kladder</a>";
 echo "</div>";	
 
 if($user_rank > 0)
@@ -344,6 +344,48 @@ if($user_rank > 0)
 			/* End building navigation */
 		}
 	}	
+	if(isset($_GET['drafts']))
+	{
+		$drafts = $forum->get_drafts_from_user($user_logged_in_ID);
+		
+		echo "<div class='category'><a href=''>Kladder</a></div>";	
+		echo "<table class='center' id='draftlist'>";
+		echo "<tr>";
+		echo "<th>Emne</th><th>Forum</th><th>Dato</th><th>Brugt kladde</th><th></th>";		
+		echo "</tr>";
+		
+		while($draft = $drafts->fetch_assoc())
+		{
+			$f = $forum->get_forum($draft['fk_forum_ID'])->fetch_assoc();
+		 	echo "<tr>";
+			if($draft['fk_topic_ID'] == 0) { echo "<td><a href='posting.php?f=".$draft['fk_forum_ID']."&draft=".$draft['draft_ID']."'>Nyt emne</a></td>";} 
+			else 
+			{ 
+				$t = $forum->get_topic($draft['fk_topic_ID'])->fetch_assoc();
+				echo "<td><a href='posting.php?t=".$draft['fk_topic_ID']."&draft=".$draft['draft_ID']."'>".$t['title']."</a></td>";
+			} 
+			echo "<td>".$f['title']."</td>";
+			echo "<td>".date("j. M Y G:i", strtotime($draft['datetime']))."</td>";
+			if($draft['used'] == 1){ echo "<td>Ja</td>";} else { echo "<td>Nej</td>";}
+			
+			echo "<td class='center'><form method='post'> <input type='hidden' name='draft' value='".$draft['draft_ID']."'/>
+				<input type='submit' name='delete_draft' value='Slet'"; ?>
+					onclick='return confirm("Er du sikker på, at du vil slette denne kladde? Det kan ikke fortrydes.")'
+					<?php echo "/> </form></td>";
+			
+			echo "</tr>";
+		}
+		
+		echo "</table>";
+		
+		if($_POST['delete_draft'])
+		{
+			$draft_to_remove = $_POST['draft'];
+			$forum->delete_draft($draft_to_remove);
+			header('Location:mytopics.php?drafts');
+		}
+		
+	}
 	if (empty($_GET))
 	{
 		echo "<div class='category'><a href=''>Mangler svar</a></div>";

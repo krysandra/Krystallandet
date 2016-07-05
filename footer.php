@@ -1,10 +1,38 @@
 </div>
-
 <div id="footer">
+<?php
+
+echo "<div class='category'><a href='#focus'>Fokus</a></div>";
+echo "<div id='focus'>";
+?>
+<table style="margin: auto;">
+<tr>
+<td style="width:220px; text-align: center; margin-right: 10px; "><img src="http://krystallandet.dk/kl_pictures/manedens_tekst1_2016.png"/></td>
+<td style="width:220px; text-align: center; margin-left:10px; margin-right: 10px;"><img src="http://krystallandet.dk/kl_pictures/manedens_tekst2_2016.png"/></td>
+<td style="width:220px; text-align: center; margin-left: 10px;"><img src="http://krystallandet.dk/kl_pictures/manedens_tekst3_2016.png"/></td>
+</tr>
+<tr>
+<td style="width:220px; text-align: center;"><img class='focusimg' src="http://krystallandet.dk/kl_pictures/focustest1.png"/>
+<h5><a href="http://krystallandet.dk/viewtopic.php?f=378&t=8619">Moana</a></h5></td>
+
+<td style="width:220px; text-align: center;"><img class='focusimg' src="http://krystallandet.dk/kl_pictures/focustest2.png"/>
+<h5><a href="http://krystallandet.dk/viewtopic.php?f=378&t=9327">Hobbit</a></h5></td>
+
+<td style="width:220px; text-align: center;"><img class='focusimg' src="http://krystallandet.dk/kl_pictures/manedens_trad2016.png"/>
+<h5><a href="http://krystallandet.dk/viewtopic.php?f=442&t=9386">Farezone</a></h5></td>
+
+</tr>
+</table>
+<?php
+echo "</div>";
+?>
+
+
 <div id="usermenu">
 	<img class='scrollbutton' src='images/up.png' id='topofpage' onclick='window.scrollTo(0,0);' style='cursor:pointer;' title='Til toppen'/>
 	<?php include('usermenu.php'); ?>
 </div>
+
 <?php
 
 echo "<a id='mobilecbox' href='chat/index.php'>Åben chatbox</a>";

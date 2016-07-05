@@ -273,9 +273,13 @@ if(isset($_GET['showposts']))
 			echo "<b>Svar:</b>  ".$numofanswers."<br/>";
 			echo "<b>Visninger:</b>  ".$currenttopic['views']."<br/>";
 			
+			$numberofprevposts = $forum->count_prev_posts($currenttopic['topic_ID'], $p['datetime'])->fetch_assoc();
+			$numberofprevposts = $numberofprevposts['res'] + 1;
+			$topicpagenumber = ceil($numberofprevposts / $postsperpage);
+			
 			echo "</div>";
 			echo "<div class='smallpostcontent'>";
-			echo "<a class='smallposttitle' href='viewtopic.php?t=".$currenttopic['topic_ID']."#".$p['post_ID']."'>".$currenttopic['title']."</a>";
+			echo "<a class='smallposttitle' href='viewtopic.php?t=".$currenttopic['topic_ID']."&currentpage=".$topicpagenumber."#".$p['post_ID']."'>".$currenttopic['title']."</a>";
 			
 			if (strlen($p['text']) > 300) 
 			{

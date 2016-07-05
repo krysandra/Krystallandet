@@ -21,34 +21,33 @@ echo "<div class='topbar'>";
 echo "<h3>Top-posters</h3>";
 echo "</div>";
 echo "<div class='sidebarcontent'>";
-echo "<span class='center'>";
-echo "<h5>Denne måned</h5>";
-echo "<p class='center'>";
-
 $time = microtime(true);
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $finish = $time;
 $bftopposters_time = round(($finish - $start), 4);
+?>
+<script language="JavaScript">
+<!--
+function autoResize(id){
+    var newheight;
+    var newwidth;
 
-$monthly_topposters = $forum->get_topposters_monthly(date('m'),date('Y'));
+    if(document.getElementById){
+        newheight = document.getElementById(id).contentWindow.document .body.scrollHeight;
+        newwidth = document.getElementById(id).contentWindow.document .body.scrollWidth;
+    }
 
-while($user = $monthly_topposters->fetch_assoc())
-{
-	echo "<a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a>: ".$user['NumberOfPosts']."<br/>";	
+    document.getElementById(id).height = (newheight) + "px";
+    document.getElementById(id).width = (newwidth) + "px";
 }
+//-->
+</script>
 
-echo "</p>";
-echo "<h5>I alt</h5>";
-echo "<p class='center'>";
-$overall_topposters = $forum->get_topposters_overall();
-while($user = $overall_topposters->fetch_assoc())
-{
-	echo "<a class='username' style='color:".$user['color'].";' href='memberprofile.php?id=".$user['superuser_ID']."'>".$user['name']."</a>: ".$user['NumberOfPosts']."<br/>";	
-}
-echo "</p>";
+<iframe src="topposters.php" width="100%" height="200px" id="topposters" marginheight="0" frameborder="0" onLoad="autoResize('topposters');"></iframe>
 
-echo "</span></div></div>";
+<?php
+echo "</div></div>";
 
 $time = microtime(true);
 $time = explode(' ', $time);
@@ -164,8 +163,6 @@ echo "<div class='topbar'>";
 echo "<h3>Forumposts</h3>";
 echo "</div>";
 echo "<div class='sidebarcontent'>";
-$latestposts = $forum->get_five_latest_overall_posts($user_rank);
-
 
 $time = microtime(true);
 $time = explode(' ', $time);
@@ -173,50 +170,11 @@ $time = $time[1] + $time[0];
 $finish = $time;
 $latesttopics_time = round(($finish - $start), 4);
 
-echo "<table>";
-while($post = $latestposts->fetch_assoc())
-{
-	$numofposts = $forum->get_numberof_posts($post['topic_ID'])->fetch_assoc();
-	$numofanswers = ($numofposts['res'])-1;
-	$pagenumber = ceil($numofposts['res'] / $postsperpage);
-	$lastpost = $forum->get_last_post($post['topic_ID'])->fetch_assoc();
-	
-	echo "<tr><td>";
-	echo "<a class='bold' href='viewtopic.php?t=".$post['topic_ID']."&currentpage=".$pagenumber."#".$lastpost['post_ID']."'>".$post['topictitle']."</a><br/>";
-	if($post['topictype'] != ""){ echo "<span class='topicwarning'>".$post['topictype']."</span>"; }
-	if($post['warning'] != ""){ echo "<span class='topicwarning italic'>".$post['warning']."</span>"; }
-	$lastposter = $forum->get_last_topic_poster($post['topic_ID'])->fetch_assoc();
-	echo "<span class='smallsidebartext'>";
-	if($post['ingame'] == 1) 
-	{ 
-		if($lastposter['fk_character_ID'] == 0)
-		{
-			echo "af <a class='username'>slettet karakter</a> ";	
-		}
-		else
-		{
-			$character = $forum->get_character($lastposter['fk_character_ID'])->fetch_assoc();
-			echo "af <a class='username' style='color:".$character['color'].";' href='characterprofile.php?id=".$lastposter['fk_character_ID']."'>".$character['name']."</a> ";
-		}
-	}
-	else
-	{
-		if($lastposter['fk_superuser_ID'] == 0)
-		{
-			echo "af <a class='username'>Gæst</a> ";	
-		}
-		else
-		{
-			$superuser = $forum->get_superuser($lastposter['fk_superuser_ID'])->fetch_assoc();
-			echo "af <a class='username' style='color:".$superuser['color'].";' href='memberprofile.php?id=".$lastposter['fk_superuser_ID']."'>".$superuser['name']."</a> ";
-		}
-	}
-	echo date("d.m.Y G:i", strtotime($post['last_posted']))."<br/>";
-	echo " i <a class='bold' href='viewforum.php?f=".$post['forum_ID']."'>".$post['forumtitle']."</a><br/>";
-	echo "</span>";
-	echo "</td></tr>";	
-}
-echo "</table>";
+?>
+
+<iframe src="newposts.php" width="220px" height="200px" id="newposts" marginheight="0" frameborder="0" onLoad="autoResize('newposts');"></iframe>
+
+<?php
 echo "<p class='center'>";
 echo "<a href='search.php?latestposts'>(Se flere)</a>";
 echo "</p>";

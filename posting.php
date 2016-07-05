@@ -61,6 +61,30 @@ if(isset($_GET['f']))
 		
 			// define variables and set to empty values 
 			$topic_title = $topic_text = $topic_author = $topic_next = $errormsg = "";
+			
+			$draft_id = 0;
+			
+			//If one or more drafts for a new topic in this forum exists, get the newest
+			$topicdraft = $forum->get_draft_for_forum($user_logged_in_ID, $f)->fetch_assoc();
+			if($topicdraft['text'] != "") { $topic_text = $topicdraft['text']; $draft_id = $topicdraft['draft_ID']; }
+			
+			if(isset($_GET['draft'])) //if a draft was loaded, put it into the text field
+			{
+				$draft = $forum->get_draft($_GET['draft'])->fetch_assoc();
+				if($draft['fk_superuser_ID'] == $user_logged_in_ID)
+				{
+					$topic_text = $draft['text'];
+					$draft_id = $draft['draft_ID'];
+				}
+			}
+			
+			
+			if ((isset($_POST['save_draft'])) && $postforum['ingame'] == 1)	
+			{	
+			  $topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');
+			  $forum->insert_draft(0, $f, $user_logged_in_ID, $topic_text);
+			  header('Location:mytopics.php?drafts');
+			}
 	
 			if ((isset($_POST['submit_new_topic'])) && $postforum['ingame'] == 1)	
 			{	
@@ -117,6 +141,9 @@ if(isset($_GET['f']))
 				{
 					$new_topic = $forum->insert_new_topic($postforum['forum_ID'], $topic_title, $user_id, $topic_author, 1, $postforum['official'], $topic_pinned, $topic_warning, $topictype);					
 					$addpost = $forum->insert_new_post($new_topic, $topic_text, $user_id, $topic_author, 1, $postforum['official']);
+					
+					//draft was used
+					if($draft_id != 0) { $forum->set_draft_used($draft_id); }
 		
 					//Tag the next user
 					if($topic_next != 'no_tag_wanted')
@@ -358,7 +385,11 @@ if(isset($_GET['f']))
 				{
 					echo "<input class='submitbutton' type='button' value='Tilføj afstemning' onclick='showPoll()'> ";	
 				}
-				echo "<input class='submitbutton' type='submit' name='submit_new_topic' value='Udfør'></td>";	
+				else
+				{
+					echo "<input class='submitbutton' type='submit' name='save_draft' value='Gem kladde' formnovalidate> ";
+				}
+				echo "<input class='submitbutton bold' type='submit' name='submit_new_topic' value='Udfør'></td>";	
 				echo "</tr>";			
 				echo "</form>";
 				
@@ -432,6 +463,32 @@ if(isset($_GET['t']))
 			echo " &laquo; <a href='viewforum.php?f=".$postforum['forum_ID']."' class='forumnavlink'>".$postforum['title']."</a>";
 			echo "</div>"; //End navigation div 
 			
+			$draft_id = 0;
+			
+			//If one or more drafts for a new topic in this forum exists, get the newest
+			
+			$topicdraft = $forum->get_draft_for_topic($user_logged_in_ID, $t)->fetch_assoc();
+			if($topicdraft['text'] != "") { $topic_text = $topicdraft['text']; $draft_id = $topicdraft['draft_ID']; }
+			
+			if(isset($_GET['draft'])) //if a draft was loaded, put it into the text field
+			{
+				$draft = $forum->get_draft($_GET['draft'])->fetch_assoc();
+				if($draft['fk_superuser_ID'] == $user_logged_in_ID)
+				{
+					$topic_text = $draft['text'];
+					$draft_id = $draft['draft_ID'];
+				}
+			}
+			
+			
+			if ((isset($_POST['save_draft'])) && $postforum['ingame'] == 1)	
+			{	
+			  $topic_text = htmlspecialchars($_POST["posttext"], ENT_QUOTES, 'UTF-8');
+			  $forum->insert_draft($t, $postforum['forum_ID'], $user_logged_in_ID, $topic_text);
+			  header('Location:mytopics.php?drafts');
+			}
+			
+			
 			if ((isset($_POST['submit_new_post'])) && $postforum['ingame'] == 1)
 			{
 		
@@ -473,6 +530,9 @@ if(isset($_GET['t']))
 				{					
 					$addpost = $forum->insert_new_post($t, $topic_text, $user_id, $topic_author, 1, $postforum['official']);
 					$update_lastpost = $forum->update_topic_lastpost($t);
+					
+					//draft was used
+					if($draft_id != 0) { $forum->set_draft_used($draft_id); }
 					
 					//if character was inactive, set status to active. 
 					$author = $forum->get_character($topic_author)->fetch_assoc();
@@ -696,7 +756,6 @@ if(isset($_GET['t']))
 					echo "<input type='radio' name='nextposter' value='textinput' id='nextposter_radio' required> ";				
 
 
-
 					echo "<input type='text' name='nextposter_value' id='nextposter_value'/>";
 					?>
 		
@@ -722,6 +781,7 @@ if(isset($_GET['t']))
 				echo "<hr/>";	
 				echo "<table class='postingtable'>";
 				echo "<tr><td colspan='2' class='center'>";
+				if($postforum['ingame'] == 1) { echo "<input class='submitbutton' type='submit' name='save_draft' value='Gem kladde' formnovalidate> "; }
 				echo "<input class='submitbutton' type='submit' name='submit_new_post' value='Udfør'></td>";		
 				echo "</tr>";			
 				echo "</form>";
@@ -748,6 +808,7 @@ if(isset($_GET['t']))
 						$user = $forum->get_character($p['fk_character_ID'])->fetch_assoc();
 						echo "<a class='username' style='color:".$user['color'].";' href='characterprofile.php?id=".$user['character_ID']."'>".$user['name']." </a> » ";
 					}
+
 					else
 					{
 						$user = $forum->get_superuser($p['fk_superuser_ID'])->fetch_assoc();
@@ -1175,6 +1236,7 @@ else if(isset($_GET['edit']))
 				{
 					if($topic_to_edit['topictype'] == 'Åben tråd') { echo "<input type='hidden' name='open' value='yes'/>";	}
 				}
+
 				
 				
 				//If the topic has a poll, the user should have the option to delete it

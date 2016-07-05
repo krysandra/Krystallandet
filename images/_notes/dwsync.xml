@@ -24,7 +24,7 @@
 <file name="topic_pinned.png" server="ftp.krystallandet.dk" local="131083080116929908" remote="131094471600000000" Dst="2" />
 <file name="topic_normal.png" server="ftp.krystallandet.dk" local="131083080114449766" remote="131094471600000000" Dst="2" />
 <file name="topic_locked.png" server="ftp.krystallandet.dk" local="131083080111889620" remote="131094471600000000" Dst="2" />
-<file name="mobilelogo.png" server="ftp.krystallandet.dk" local="131037354081613766" remote="131094471600000000" Dst="2" />
+<file name="mobilelogo.png" server="ftp.krystallandet.dk" local="131121337048621966" remote="131121264600000000" Dst="2" />
 <file name="first.png" server="ftp.krystallandet.dk" local="131083079765169788" remote="131094471600000000" Dst="2" />
 <file name="last.png" server="ftp.krystallandet.dk" local="131083080098108831" remote="131094471600000000" Dst="2" />
 <file name="next.png" server="ftp.krystallandet.dk" local="131083080102699094" remote="131094471600000000" Dst="2" />
@@ -32,4 +32,5 @@
 <file name="up.png" server="ftp.krystallandet.dk" local="131094526771238408" remote="131094471600000000" Dst="2" />
 <file name="down.png" server="ftp.krystallandet.dk" local="131094526675902955" remote="131094471600000000" Dst="2" />
 <file name="fb.png" server="ftp.krystallandet.dk" local="131108925890284000" remote="131108854200000000" Dst="2" />
+<file name="testbanner1.png" server="ftp.krystallandet.dk" local="131115149703220436" remote="131115077400000000" Dst="2" />
 </dwsync>

@@ -564,7 +564,7 @@ class dbFunctions
 						
 	public function get_characters_from_superuser($id)
 	{
-		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, avatar, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND dead = 0 AND fk_superuser_ID = ? ORDER BY name");
+		$query = $this->conn->prepare("SELECT character_ID, name, accepted, active, dead, color, avatar, fk_superuser_ID FROM ".$this->prefix."_usercharacters WHERE accepted = 1 AND dead = 0 AND fk_superuser_ID = ? ORDER BY active DESC, name");
 		$query->bind_param('i', $id);
 		$query->execute();	
 		/* Get the result */
@@ -2061,6 +2061,84 @@ class dbFunctions
 		$query->execute();		
 		/* Get the result */
 		return $query->get_result();	
+	}
+	
+	public function insert_draft($topic, $forum, $user, $text) 
+	{
+		$now = date("Y-m-d H:i:s");
+		$query = $this->conn->prepare("INSERT INTO ".$this->prefix."_drafts (fk_superuser_ID, fk_topic_ID, fk_forum_ID, text, datetime, used)
+		VALUES (?, ?, ?, ?, ?, 0)");
+		$query->bind_param('iiiss', $user, $topic, $forum, $text, $now);
+		$query->execute();		
+		
+		return 1;
+	}
+	
+	public function get_drafts_from_user($user) 
+	{
+		$query = $this->conn->prepare("SELECT draft_ID, fk_topic_ID, fk_forum_ID, datetime, used FROM ".$this->prefix."_drafts
+		WHERE fk_superuser_ID = ?
+		ORDER BY used, datetime DESC");
+		$query->bind_param('i', $user);
+		$query->execute();		
+		
+		return $query->get_result();
+	}
+	
+	public function get_draft_for_forum($user, $forum) 
+	{
+		$query = $this->conn->prepare("SELECT draft_ID, fk_topic_ID, fk_forum_ID, datetime, used, text FROM ".$this->prefix."_drafts
+		WHERE fk_superuser_ID = ? AND fk_forum_ID = ? AND fk_topic_ID = 0 AND used = 0
+		ORDER BY used, datetime DESC LIMIT 1");
+		$query->bind_param('ii', $user, $forum);
+		$query->execute();		
+		
+		return $query->get_result();
+	}
+	
+	public function get_draft_for_topic($user, $topic) 
+	{
+		$query = $this->conn->prepare("SELECT draft_ID, fk_topic_ID, fk_forum_ID, datetime, used, text FROM ".$this->prefix."_drafts
+		WHERE fk_superuser_ID = ? AND fk_topic_ID = ? AND used = 0
+		ORDER BY used, datetime DESC LIMIT 1");
+		$query->bind_param('ii', $user, $topic);
+		$query->execute();		
+		
+		return $query->get_result();
+	}
+	
+	public function get_draft($id) 
+	{
+		$query = $this->conn->prepare("SELECT draft_ID, fk_superuser_ID, fk_topic_ID, fk_forum_ID, datetime, used, text FROM ".$this->prefix."_drafts
+		WHERE draft_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		
+		return $query->get_result();
+	}
+	
+	public function set_draft_used($id) 
+	{
+		$query = $this->conn->prepare("UPDATE ".$this->prefix."_drafts SET used = 1 WHERE draft_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function delete_draft($id) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_drafts WHERE draft_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		return 1;
+	}
+	
+	public function delete_drafts_from_superuser($id) 
+	{
+		$query = $this->conn->prepare("DELETE FROM ".$this->prefix."_drafts WHERE fk_superuser_ID = ?");
+		$query->bind_param('i', $id);
+		$query->execute();		
+		return 1;
 	}
 	
 	/* TAGS */
